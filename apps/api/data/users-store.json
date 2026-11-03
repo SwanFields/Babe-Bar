@@ -1,0 +1,242 @@
+[
+  {
+    "id": "50e175f1-1403-4042-9924-8f5b100d93d9",
+    "email": "kittisak@babebar.local",
+    "passwordHash": "$2a$12$Dz.ZNnWSDfj5FBHwfFcxku5ygU4hIATDfmGGerllEDYKw2tuBetsW",
+    "fullName": "กิตติศักดิ์ พัฒนาการ",
+    "phone": "0897771234",
+    "username": "kittisak_dev",
+    "birthDate": "1996-03-25T00:00:00.000Z",
+    "role": "customer",
+    "status": "suspended",
+    "emailVerifiedAt": "2026-11-03T12:04:42.708Z",
+    "stripeCustomerId": null,
+    "auctionBannedUntil": null,
+    "createdAt": "2026-11-03T12:04:42.708Z",
+    "updatedAt": "2026-11-03T12:04:42.711Z",
+    "activity": {
+      "bookings": 0,
+      "bids": 0,
+      "tickets": 0,
+      "packageOrders": 0,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-11-03T12:04:42.708Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-11-03T12:04:42.708Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-11-03T12:04:42.708Z"
+      }
+    ]
+  },
+  {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "email": "admin@babebar.local",
+    "passwordHash": "$2a$10$D4NEVyHW8SBtplZK0KhFNeZ1cbo8oN9DH5Q.4fO1qli6nZfmb5gnq",
+    "fullName": "Babe Bar Super Admin",
+    "phone": "0800000000",
+    "username": "admin",
+    "birthDate": "1992-04-15T00:00:00.000Z",
+    "role": "admin",
+    "status": "active",
+    "emailVerifiedAt": "2026-01-10T12:00:00.000Z",
+    "stripeCustomerId": "cus_admin_001",
+    "auctionBannedUntil": null,
+    "createdAt": "2026-01-01T20:00:00.000Z",
+    "updatedAt": "2026-11-03T18:00:00.000Z",
+    "activity": {
+      "bookings": 12,
+      "bids": 35,
+      "tickets": 8,
+      "packageOrders": 5,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-01-01T20:00:00.000Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-01-01T20:00:00.000Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-01-01T20:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "email": "staff.luna@babebar.local",
+    "passwordHash": "$2a$10$cgBjoNqjJGNjajGCzjA0aOigxb3prVlYnAp9hyYaeoUQOxQeSiSaa",
+    "fullName": "Luna Supervisor (ลูน่า)",
+    "phone": "0812345678",
+    "username": "luna_staff",
+    "birthDate": "1997-08-22T00:00:00.000Z",
+    "role": "staff",
+    "status": "active",
+    "emailVerifiedAt": "2026-02-14T10:00:00.000Z",
+    "stripeCustomerId": null,
+    "auctionBannedUntil": null,
+    "createdAt": "2026-02-01T15:30:00.000Z",
+    "updatedAt": "2026-10-25T11:20:00.000Z",
+    "activity": {
+      "bookings": 0,
+      "bids": 0,
+      "tickets": 0,
+      "packageOrders": 0,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-02-01T15:30:00.000Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-02-01T15:30:00.000Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-02-01T15:30:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "email": "vip.somchai@gmail.com",
+    "passwordHash": "$2a$10$cgBjoNqjJGNjajGCzjA0aOigxb3prVlYnAp9hyYaeoUQOxQeSiSaa",
+    "fullName": "คุณสมชาย ใจดี (VIP Platinum)",
+    "phone": "0898765432",
+    "username": "somchai_vip",
+    "birthDate": "1995-11-05T00:00:00.000Z",
+    "role": "customer",
+    "status": "active",
+    "emailVerifiedAt": "2026-03-01T09:15:00.000Z",
+    "stripeCustomerId": "cus_somchai_vip_99",
+    "auctionBannedUntil": null,
+    "createdAt": "2026-03-01T09:00:00.000Z",
+    "updatedAt": "2026-11-02T22:15:00.000Z",
+    "activity": {
+      "bookings": 14,
+      "bids": 42,
+      "tickets": 6,
+      "packageOrders": 4,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-03-01T09:00:00.000Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-03-01T09:00:00.000Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-03-01T09:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "44444444-4444-4444-8444-444444444444",
+    "email": "ploy.babe@gmail.com",
+    "passwordHash": "$2a$10$cgBjoNqjJGNjajGCzjA0aOigxb3prVlYnAp9hyYaeoUQOxQeSiSaa",
+    "fullName": "พลอยไพลิน พรภิรมย์",
+    "phone": "0865551234",
+    "username": "ploy_cute",
+    "birthDate": "2001-03-18T00:00:00.000Z",
+    "role": "customer",
+    "status": "active",
+    "emailVerifiedAt": "2026-05-19T14:22:00.000Z",
+    "stripeCustomerId": "cus_ploy_442",
+    "auctionBannedUntil": null,
+    "createdAt": "2026-05-19T14:00:00.000Z",
+    "updatedAt": "2026-10-30T19:40:00.000Z",
+    "activity": {
+      "bookings": 5,
+      "bids": 18,
+      "tickets": 3,
+      "packageOrders": 2,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-05-19T14:00:00.000Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-05-19T14:00:00.000Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-05-19T14:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "id": "55555555-5555-4555-8555-555555555555",
+    "email": "john.nightowl@yahoo.com",
+    "passwordHash": "$2a$10$cgBjoNqjJGNjajGCzjA0aOigxb3prVlYnAp9hyYaeoUQOxQeSiSaa",
+    "fullName": "Johnathan Nightowl",
+    "phone": "0823334444",
+    "username": "johnny_night",
+    "birthDate": "1994-07-07T00:00:00.000Z",
+    "role": "customer",
+    "status": "suspended",
+    "emailVerifiedAt": null,
+    "stripeCustomerId": null,
+    "auctionBannedUntil": "2026-12-31T23:59:59.000Z",
+    "createdAt": "2026-07-12T18:45:00.000Z",
+    "updatedAt": "2026-10-15T16:00:00.000Z",
+    "activity": {
+      "bookings": 1,
+      "bids": 3,
+      "tickets": 0,
+      "packageOrders": 0,
+      "consents": 3
+    },
+    "consents": [
+      {
+        "consentType": "terms",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-07-12T18:45:00.000Z"
+      },
+      {
+        "consentType": "privacy",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-07-12T18:45:00.000Z"
+      },
+      {
+        "consentType": "age_20_plus",
+        "documentVersion": "v1",
+        "acceptedAt": "2026-07-12T18:45:00.000Z"
+      }
+    ]
+  }
+]
