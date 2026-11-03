@@ -183,7 +183,7 @@ model Package {
  priceSatang Int
  includes Json
  requiresHostPick Boolean @default(false)
- validDays Int @default(30)
+ validDays Int @default(7)
  isActive Boolean @default(true)
  sortOrder Int @default(0)
  orders PackageOrder[]
@@ -225,9 +225,9 @@ model AuctionItem {
   id Int @id @default(autoincrement())
  sessionId Int
  hostId Int
- startPriceSatang Int @default(25000)
- minIncrementSatang Int @default(5000)
- currentPriceSatang Int @default(25000)
+ startPriceSatang Int @default(0)
+ minIncrementSatang Int @default(25000)
+ currentPriceSatang Int @default(0)
  leadingUserId String? @db.Uuid
  winnerUserId String? @db.Uuid
  status AuctionItemStatus @default(open)
@@ -339,8 +339,6 @@ model SystemSetting {
  value Json
  updatedAt DateTime @updatedAt
 }
-
-
 
 
 

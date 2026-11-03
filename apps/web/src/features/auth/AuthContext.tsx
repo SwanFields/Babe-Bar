@@ -1,17 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { LoginInput, RegisterInput } from "@babe-bar/shared";
+import type { LoginInput, RegisterInput, UserProfileDto } from "@babe-bar/shared";
 import { api } from "../../lib/api";
 
-export type User = {
-  id: string;
-  email: string;
-  fullName: string;
-  username?: string;
-  role: string;
-  status?: string;
-  phone?: string;
-  birthDate?: string;
-};
+export type User = UserProfileDto;
 
 type AuthContextValue = {
   user: User | null;

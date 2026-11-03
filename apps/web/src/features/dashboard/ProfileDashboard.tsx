@@ -35,37 +35,37 @@ function formatBirthDate(dateString: string): string {
   }
 }
 
-// Role badge styling
-function RoleBadge({ role }: { role: Role }) {
+// Role badge styling (Minimal & Soft)
+export function RoleBadge({ role }: { role: Role }) {
   if (role === "admin") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-neon-pink/40 bg-neon-pink/15 px-3 py-1 text-xs font-semibold text-neon-pink shadow-[0_0_10px_rgba(255,46,147,0.3)]">
-        <span className="h-1.5 w-1.5 rounded-full bg-neon-pink animate-pulse" />
-        Admin (ผู้ดูแลระบบ)
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/25 bg-rose-500/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-rose-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+        Admin (ผู้ดูแล)
       </span>
     );
   }
   if (role === "staff") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/40 bg-neon-cyan/15 px-3 py-1 text-xs font-semibold text-neon-cyan shadow-[0_0_10px_rgba(0,229,212,0.3)]">
-        <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan" />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-500/25 bg-teal-500/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-teal-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
         Staff (พนักงาน)
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1 text-xs font-semibold text-gold">
-      <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-amber-300">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
       Customer (ลูกค้า)
     </span>
   );
 }
 
 // Status badge styling
-function StatusBadge({ status }: { status: UserStatus }) {
+export function StatusBadge({ status }: { status: UserStatus }) {
   if (status === "active") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/[0.08] px-2 py-0.5 text-[11px] font-medium text-emerald-400">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
         Active ปกติ
       </span>
@@ -73,21 +73,21 @@ function StatusBadge({ status }: { status: UserStatus }) {
   }
   if (status === "suspended") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/15 px-2.5 py-0.5 text-xs font-medium text-rose-400">
+      <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/25 bg-rose-500/[0.08] px-2 py-0.5 text-[11px] font-medium text-rose-400">
         <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
         Suspended ถูกระงับ
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-zinc-500/40 bg-zinc-500/15 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
+    <span className="inline-flex items-center gap-1 rounded-full border border-slate-600/30 bg-slate-800/40 px-2 py-0.5 text-[11px] font-medium text-slate-400">
       Deleted ลบแล้ว
     </span>
   );
 }
 
-// User initials avatar
-function UserAvatar({ name, role, size = "md" }: { name: string; role: Role; size?: "sm" | "md" | "lg" }) {
+// User initials avatar (Clean & Minimal)
+export function UserAvatar({ name, role, size = "md" }: { name: string; role: Role; size?: "sm" | "md" | "lg" }) {
   const initials = name
     .trim()
     .split(" ")
@@ -97,20 +97,20 @@ function UserAvatar({ name, role, size = "md" }: { name: string; role: Role; siz
     .toUpperCase() || "BB";
 
   const sizeClasses = {
-    sm: "h-9 w-9 text-xs",
-    md: "h-12 w-12 text-sm",
-    lg: "h-16 w-16 text-lg"
+    sm: "h-8 w-8 text-xs",
+    md: "h-11 w-11 text-xs font-semibold",
+    lg: "h-14 w-14 text-sm font-semibold"
   }[size];
 
   const ringColor = {
-    admin: "border-neon-pink text-neon-pink bg-neon-pink/10 shadow-[0_0_12px_rgba(255,46,147,0.3)]",
-    staff: "border-neon-cyan text-neon-cyan bg-neon-cyan/10 shadow-[0_0_12px_rgba(0,229,212,0.3)]",
-    customer: "border-gold text-gold bg-gold/10 shadow-[0_0_12px_rgba(255,200,61,0.2)]"
+    admin: "border-rose-500/30 text-rose-300 bg-rose-500/[0.08]",
+    staff: "border-teal-500/30 text-teal-300 bg-teal-500/[0.08]",
+    customer: "border-amber-500/30 text-amber-300 bg-amber-500/[0.08]"
   }[role];
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-2xl border font-display font-bold tracking-wider ${sizeClasses} ${ringColor}`}
+      className={`flex shrink-0 items-center justify-center rounded-2xl border font-display tracking-wider ${sizeClasses} ${ringColor}`}
     >
       {initials}
     </div>
@@ -156,7 +156,7 @@ export function ProfileDashboard() {
 
   const showNotice = (msg: string) => {
     setActionNotice(msg);
-    setTimeout(() => setActionNotice(null), 3500);
+    setTimeout(() => setActionNotice(null), 3000);
   };
 
   // Quick Seed Sample Data
@@ -174,7 +174,7 @@ export function ProfileDashboard() {
   const handleSwitchUser = async (user: UserProfileDto) => {
     try {
       await switchAccount(user.id);
-      showNotice(`สลับการเข้าใช้งานเป็น ${user.fullName} (@${user.username}) เรียบร้อย!`);
+      showNotice(`สลับการเข้าใช้งานเป็น ${user.fullName} (@${user.username}) เรียบร้อย`);
     } catch (e: any) {
       showNotice(e?.response?.data?.error ?? "เกิดข้อผิดพลาดในการสลับบัญชี");
     }
@@ -232,151 +232,167 @@ export function ProfileDashboard() {
   }, [users]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Toast Alert Notice */}
       {actionNotice && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-neon-cyan/60 bg-night-900/95 px-5 py-3.5 text-neon-cyan shadow-[0_0_25px_rgba(0,229,212,0.35)] backdrop-blur transition-all">
-          <span className="text-lg">✦</span>
-          <span className="text-sm font-medium text-white">{actionNotice}</span>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl border border-white/15 bg-night-900/95 px-4 py-3 text-xs text-white shadow-xl backdrop-blur-xl transition-all">
+          <span className="h-2 w-2 rounded-full bg-teal-400" />
+          <span>{actionNotice}</span>
         </div>
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-lg bg-neon-pink/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-neon-pink">
-              Babe Bar System
+          <div className="flex items-center gap-2.5">
+            <span className="rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-300">
+              Accounts Directory
             </span>
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
                 dataSource === "prisma"
-                  ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                  : "border border-gold/40 bg-gold/10 text-gold"
+                  ? "border border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300"
+                  : "border border-amber-500/20 bg-amber-500/[0.08] text-amber-300"
               }`}
             >
-              <span className={`h-1.5 w-1.5 rounded-full ${dataSource === "prisma" ? "bg-emerald-400" : "bg-gold"}`} />
-              {dataSource === "prisma" ? "PostgreSQL (Prisma)" : "Local Database (พร้อมใช้งาน)"}
+              <span className={`h-1.5 w-1.5 rounded-full ${dataSource === "prisma" ? "bg-emerald-400" : "bg-amber-400"}`} />
+              {dataSource === "prisma" ? "PostgreSQL (Prisma)" : "Local Database"}
             </span>
           </div>
-          <h1 className="mt-2.5 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-            Dashboard <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-gold to-neon-cyan">โปรไฟล์บัญชี</span>
+
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-white sm:text-4xl">
+            แดชบอร์ดโปรไฟล์บัญชี
           </h1>
-          <p className="mt-2 max-w-2xl text-ink-mute">
-            ศูนย์ข้อมูลและรายละเอียดของบัญชีทั้งหมดในระบบ Babe Bar ทั้งข้อมูลส่วนตัว, บทบาท, สถานะ, และประวัติกิจกรรม
+          <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+            จัดการและดูรายละเอียดโปรไฟล์ผู้ใช้งานทั้งหมดในระบบ Babe Bar
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={fetchUsers}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-night-900 px-4 py-2.5 text-sm font-medium text-ink-mute transition hover:border-white/20 hover:text-white"
+            className="btn-outline !min-h-9 !px-3.5 !py-1.5 text-xs"
             title="รีเฟรชข้อมูลล่าสุด"
           >
-            <span className={loading ? "animate-spin" : ""}>🔄</span>
-            รีเฟรช
+            <svg
+              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            <span className="ml-1.5">รีเฟรช</span>
           </button>
+
           <button
             onClick={handleSeedSamples}
-            className="flex items-center gap-2 rounded-xl border border-neon-cyan/40 bg-neon-cyan/10 px-4 py-2.5 text-sm font-medium text-neon-cyan transition hover:bg-neon-cyan/20"
+            className="btn-outline !min-h-9 !px-3.5 !py-1.5 text-xs"
             title="เพิ่มบัญชีตัวอย่างเพื่อทดสอบ"
           >
-            <span>⚡</span>
-            เพิ่มข้อมูลตัวอย่าง
+            <span>เติมข้อมูลตัวอย่าง</span>
           </button>
+
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="btn-primary flex items-center gap-2 text-sm"
+            className="btn-primary !min-h-9 !px-4 !py-1.5 text-xs"
           >
-            <span className="text-lg leading-none">+</span>
-            สร้างโปรไฟล์ใหม่
+            <span className="text-base leading-none mr-1">+</span>
+            <span>สร้างโปรไฟล์ใหม่</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Summary Cards */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="card !p-4 border-white/10 bg-night-900/80">
-          <p className="text-xs font-medium text-ink-mute">บัญชีทั้งหมด</p>
-          <p className="mt-2 font-display text-3xl font-bold text-white">{stats.total}</p>
-          <p className="mt-1 text-xs text-emerald-400">ใช้งานอยู่ {stats.active} บัญชี</p>
+      {/* KPI Summary Cards (Minimal & Sleek) */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="card !p-4 !rounded-xl">
+          <p className="text-[11px] font-medium text-slate-400">บัญชีทั้งหมด</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-white">{stats.total}</p>
+          <p className="mt-1 text-[11px] text-emerald-400">ปกติ {stats.active} บัญชี</p>
         </div>
 
-        <div className="card !p-4 border-neon-pink/30 bg-neon-pink/5">
-          <p className="text-xs font-medium text-neon-pink">Admins (ผู้ดูแล)</p>
-          <p className="mt-2 font-display text-3xl font-bold text-neon-pink">{stats.admins}</p>
-          <p className="mt-1 text-xs text-ink-mute">สิทธิ์ควบคุมสูงสุด</p>
+        <div className="card !p-4 !rounded-xl border-rose-500/15 bg-rose-500/[0.03]">
+          <p className="text-[11px] font-medium text-rose-300">ผู้ดูแล (Admins)</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-rose-300">{stats.admins}</p>
+          <p className="mt-1 text-[11px] text-slate-400">สิทธิ์สูงสุด</p>
         </div>
 
-        <div className="card !p-4 border-neon-cyan/30 bg-neon-cyan/5">
-          <p className="text-xs font-medium text-neon-cyan">Staff (พนักงาน)</p>
-          <p className="mt-2 font-display text-3xl font-bold text-neon-cyan">{stats.staff}</p>
-          <p className="mt-1 text-xs text-ink-mute">จัดการโต๊ะและบาร์</p>
+        <div className="card !p-4 !rounded-xl border-teal-500/15 bg-teal-500/[0.03]">
+          <p className="text-[11px] font-medium text-teal-300">พนักงาน (Staff)</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-teal-300">{stats.staff}</p>
+          <p className="mt-1 text-[11px] text-slate-400">บริการและโต๊ะ</p>
         </div>
 
-        <div className="card !p-4 border-gold/30 bg-gold/5">
-          <p className="text-xs font-medium text-gold">Customers (ลูกค้า)</p>
-          <p className="mt-2 font-display text-3xl font-bold text-gold">{stats.customers}</p>
-          <p className="mt-1 text-xs text-ink-mute">สมาชิกในระบบ</p>
+        <div className="card !p-4 !rounded-xl border-amber-500/15 bg-amber-500/[0.03]">
+          <p className="text-[11px] font-medium text-amber-300">ลูกค้า (Customers)</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-amber-300">{stats.customers}</p>
+          <p className="mt-1 text-[11px] text-slate-400">สมาชิกในร้าน</p>
         </div>
 
-        <div className="card !p-4 border-emerald-500/30 bg-emerald-500/5">
-          <p className="text-xs font-medium text-emerald-400">สถานะ Active</p>
-          <p className="mt-2 font-display text-3xl font-bold text-emerald-400">{stats.active}</p>
-          <p className="mt-1 text-xs text-ink-mute">
-            {stats.total > 0 ? `${Math.round((stats.active / stats.total) * 100)}% ของทั้งหมด` : "0%"}
+        <div className="card !p-4 !rounded-xl">
+          <p className="text-[11px] font-medium text-slate-400">สถานะ Active</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-emerald-400">{stats.active}</p>
+          <p className="mt-1 text-[11px] text-slate-400">
+            {stats.total > 0 ? `${Math.round((stats.active / stats.total) * 100)}% พร้อมใช้งาน` : "0%"}
           </p>
         </div>
 
-        <div className="card !p-4 border-white/10 bg-night-900/80">
-          <p className="text-xs font-medium text-ink-mute">อายุเฉลี่ย</p>
-          <p className="mt-2 font-display text-3xl font-bold text-white">{stats.avgAge} <span className="text-sm font-normal text-ink-mute">ปี</span></p>
-          <p className="mt-1 text-xs text-neon-cyan">✓ ผ่านเกณฑ์ 20+ ทุกคน</p>
+        <div className="card !p-4 !rounded-xl">
+          <p className="text-[11px] font-medium text-slate-400">อายุเฉลี่ย</p>
+          <p className="mt-1.5 font-display text-2xl font-bold text-white">{stats.avgAge} <span className="text-xs font-normal text-slate-400">ปี</span></p>
+          <p className="mt-1 text-[11px] text-teal-300">ผ่านเกณฑ์ 20+</p>
         </div>
       </div>
 
       {/* Search, Filter & Controls Toolbar */}
-      <div className="mt-8 rounded-2xl border border-white/10 bg-night-900/90 p-4 backdrop-blur">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-6 rounded-2xl border border-white/[0.08] bg-night-900/40 p-3.5 backdrop-blur-md">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           {/* Search Input */}
           <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-mute">
-              🔍
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </span>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อ, @username, อีเมล, เบอร์โทรศัพท์, หรือ UUID..."
-              className="w-full rounded-xl border border-white/10 bg-night-950 py-2.5 pl-10 pr-4 text-sm text-white placeholder-ink-mute/60 outline-none transition focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan"
+              placeholder="ค้นหาชื่อ, @username, อีเมล, เบอร์โทร..."
+              className="w-full rounded-xl border border-white/10 bg-night-950/70 py-2 pl-9 pr-8 text-xs text-white placeholder-slate-500 outline-none transition focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-ink-mute hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
               >
-                ✕ ล้าง
+                ล้าง
               </button>
             )}
           </div>
 
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Role Filter Tabs */}
-            <div className="flex rounded-xl border border-white/10 bg-night-950 p-1 text-xs">
+            <div className="flex rounded-xl border border-white/10 bg-night-950/60 p-0.5 text-xs">
               {(["all", "admin", "staff", "customer"] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
-                  className={`rounded-lg px-3 py-1.5 font-medium transition ${
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
                     roleFilter === r
-                      ? "bg-neon-pink text-white shadow-sm"
-                      : "text-ink-mute hover:text-white"
+                      ? "bg-white/[0.12] text-white"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  {r === "all" ? "ทุกบทบาท" : r.toUpperCase()}
+                  {r === "all" ? "ทั้งหมด" : r.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -385,7 +401,7 @@ export function ProfileDashboard() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="rounded-xl border border-white/10 bg-night-950 px-3 py-2 text-xs text-white outline-none focus:border-neon-cyan"
+              className="rounded-xl border border-white/10 bg-night-950/60 px-2.5 py-1 text-xs text-slate-200 outline-none focus:border-rose-400"
             >
               <option value="all">ทุกสถานะ</option>
               <option value="active">Active ปกติ</option>
@@ -396,7 +412,7 @@ export function ProfileDashboard() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="rounded-xl border border-white/10 bg-night-950 px-3 py-2 text-xs text-white outline-none focus:border-neon-cyan"
+              className="rounded-xl border border-white/10 bg-night-950/60 px-2.5 py-1 text-xs text-slate-200 outline-none focus:border-rose-400"
             >
               <option value="newest">สมัครล่าสุด</option>
               <option value="oldest">สมัครเก่าสุด</option>
@@ -405,39 +421,36 @@ export function ProfileDashboard() {
             </select>
 
             {/* View Mode Toggle */}
-            <div className="flex rounded-xl border border-white/10 bg-night-950 p-1 text-xs">
+            <div className="flex rounded-xl border border-white/10 bg-night-950/60 p-0.5 text-xs">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`rounded-lg px-2.5 py-1.5 transition ${
-                  viewMode === "grid" ? "bg-white/20 text-white" : "text-ink-mute hover:text-white"
+                className={`rounded-lg px-2.5 py-1 text-[11px] transition ${
+                  viewMode === "grid" ? "bg-white/[0.12] text-white font-medium" : "text-slate-400 hover:text-white"
                 }`}
-                title="มุมมองการ์ด"
               >
-                🔲 การ์ด
+                การ์ด
               </button>
               <button
                 onClick={() => setViewMode("table")}
-                className={`rounded-lg px-2.5 py-1.5 transition ${
-                  viewMode === "table" ? "bg-white/20 text-white" : "text-ink-mute hover:text-white"
+                className={`rounded-lg px-2.5 py-1 text-[11px] transition ${
+                  viewMode === "table" ? "bg-white/[0.12] text-white font-medium" : "text-slate-400 hover:text-white"
                 }`}
-                title="มุมมองตาราง"
               >
-                📑 ตาราง
+                ตาราง
               </button>
             </div>
           </div>
         </div>
 
         {/* Active Filter Pills Indicator */}
-        <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-xs text-ink-mute">
+        <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.04] pt-2 text-[11px] text-slate-400">
           <span>
-            แสดงผล <strong className="text-white">{filteredUsers.length}</strong> จาก {users.length} บัญชี
-            {search && <span> · ค้นหา &ldquo;{search}&rdquo;</span>}
+            แสดงผล <strong className="text-slate-200">{filteredUsers.length}</strong> จาก {users.length} บัญชี
           </span>
           {currentUser && (
-            <span className="flex items-center gap-1.5 text-neon-cyan">
-              <span className="h-2 w-2 rounded-full bg-neon-cyan animate-pulse" />
-              เซสชันปัจจุบัน: <strong className="text-white">{currentUser.fullName}</strong> (@{currentUser.username ?? "user"})
+            <span className="flex items-center gap-1.5 text-teal-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+              <span>ล็อกอินอยู่: {currentUser.fullName}</span>
             </span>
           )}
         </div>
@@ -445,42 +458,38 @@ export function ProfileDashboard() {
 
       {/* Error Banner */}
       {error && (
-        <div className="mt-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-5 text-sm text-rose-300">
+        <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-4 text-xs text-rose-300">
           <p className="font-semibold">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
-          <p className="mt-1">{error}</p>
-          <button onClick={fetchUsers} className="mt-3 underline text-white hover:text-rose-200">
-            ลองใหม่อีกครั้ง
-          </button>
+          <p className="mt-0.5">{error}</p>
         </div>
       )}
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="card h-64 animate-pulse bg-night-900/50" />
+            <div key={i} className="card h-56 animate-pulse bg-night-900/30" />
           ))}
         </div>
       )}
 
       {/* Empty State */}
       {!loading && filteredUsers.length === 0 && (
-        <div className="mt-12 rounded-2xl border border-white/10 bg-night-900/60 p-12 text-center">
-          <p className="text-4xl">🔍</p>
-          <h3 className="mt-3 font-display text-xl font-semibold text-white">ไม่พบบัญชีที่ตรงกับเงื่อนไข</h3>
-          <p className="mt-2 text-sm text-ink-mute">ลองเปลี่ยนคำค้นหา หรือกดล้างตัวกรองเพื่อดูบัญชีทั้งหมด</p>
-          <div className="mt-5 flex justify-center gap-3">
+        <div className="mt-8 rounded-2xl border border-white/[0.06] bg-night-900/30 p-12 text-center">
+          <h3 className="font-display text-lg font-semibold text-white">ไม่พบบัญชีที่ค้นหา</h3>
+          <p className="mt-1 text-xs text-slate-400">ลองเปลี่ยนคำค้นหา หรือกดล้างตัวกรองเพื่อดูบัญชีทั้งหมด</p>
+          <div className="mt-4 flex justify-center gap-2">
             <button
               onClick={() => {
                 setSearch("");
                 setRoleFilter("all");
                 setStatusFilter("all");
               }}
-              className="btn-outline text-xs"
+              className="btn-outline !min-h-9 !py-1 text-xs"
             >
               ล้างตัวกรองทั้งหมด
             </button>
-            <button onClick={handleSeedSamples} className="btn-primary text-xs">
+            <button onClick={handleSeedSamples} className="btn-primary !min-h-9 !py-1 text-xs">
               เพิ่มบัญชีตัวอย่าง
             </button>
           </div>
@@ -489,106 +498,100 @@ export function ProfileDashboard() {
 
       {/* View Mode 1: Grid Cards View */}
       {!loading && viewMode === "grid" && filteredUsers.length > 0 && (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => {
             const isCurrent = currentUser?.id === user.id;
 
             return (
               <div
                 key={user.id}
-                className={`card relative flex flex-col justify-between transition hover:-translate-y-1 hover:border-white/30 ${
-                  isCurrent ? "border-neon-cyan/50 bg-night-900/90 shadow-[0_0_20px_rgba(0,229,212,0.15)]" : ""
+                className={`card relative flex flex-col justify-between transition-all duration-150 hover:-translate-y-0.5 ${
+                  isCurrent ? "border-teal-500/30 bg-night-900/80" : ""
                 }`}
               >
                 {/* Current User Badge */}
                 {isCurrent && (
-                  <div className="absolute -top-3 right-5 rounded-full border border-neon-cyan bg-night-950 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neon-cyan shadow-[0_0_10px_rgba(0,229,212,0.4)]">
-                    ⭐ เซสชันปัจจุบัน
+                  <div className="absolute -top-2.5 right-4 rounded-full border border-teal-500/40 bg-night-950 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-teal-300">
+                    เซสชันปัจจุบัน
                   </div>
                 )}
 
                 <div>
                   {/* Card Header: Avatar & Roles */}
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2.5">
                     <div className="flex items-center gap-3">
                       <UserAvatar name={user.fullName} role={user.role} size="md" />
                       <div>
-                        <h3 className="font-display text-lg font-bold text-white leading-tight">
+                        <h3 className="font-display text-base font-semibold text-white leading-tight">
                           {user.fullName}
                         </h3>
-                        <p className="text-xs font-mono text-neon-cyan/90">@{user.username}</p>
+                        <p className="text-[11px] font-mono text-slate-400">@{user.username}</p>
                       </div>
                     </div>
                     <StatusBadge status={user.status} />
                   </div>
 
-                  {/* Role Badge */}
-                  <div className="mt-4 flex items-center gap-2">
+                  {/* Role & Demographics */}
+                  <div className="mt-3 flex items-center gap-2">
                     <RoleBadge role={user.role} />
-                    <span className="text-xs text-ink-mute">
-                      อายุ <strong className="text-white">{user.age}</strong> ปี
+                    <span className="text-[11px] text-slate-400">
+                      อายุ <strong className="text-slate-200">{user.age}</strong> ปี
                     </span>
                   </div>
 
                   {/* Account Details Specs */}
-                  <div className="mt-4 space-y-2 border-t border-white/5 pt-3 text-xs">
+                  <div className="mt-3 space-y-1.5 border-t border-white/[0.04] pt-3 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-ink-mute">อีเมล:</span>
-                      <span className="font-mono text-white truncate max-w-[190px]" title={user.email}>
+                      <span className="text-slate-400 text-[11px]">อีเมล:</span>
+                      <span className="font-mono text-slate-200 text-[11px] truncate max-w-[180px]" title={user.email}>
                         {user.email}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-ink-mute">เบอร์โทร:</span>
-                      <span className="font-mono text-white">{user.phone}</span>
+                      <span className="text-slate-400 text-[11px]">เบอร์โทร:</span>
+                      <span className="font-mono text-slate-200 text-[11px]">{user.phone}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-ink-mute">วันเกิด:</span>
-                      <span className="text-ink-mute">{formatBirthDate(user.birthDate)}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-ink-mute">วันที่สร้างบัญชี:</span>
-                      <span className="text-ink-mute">{formatThaiDate(user.createdAt)}</span>
+                      <span className="text-slate-400 text-[11px]">วันเกิด:</span>
+                      <span className="text-slate-300 text-[11px]">{formatBirthDate(user.birthDate)}</span>
                     </div>
                   </div>
 
-                  {/* Activity Stats Counters */}
-                  <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-night-950/60 p-2.5 text-center text-xs">
+                  {/* Activity Stats Mini Grid */}
+                  <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-night-950/60 p-2 text-center text-xs">
                     <div>
-                      <p className="text-ink-mute text-[10px]">จองโต๊ะ</p>
-                      <p className="font-display font-semibold text-white">{user.activity.bookings}</p>
+                      <p className="text-slate-500 text-[9px]">จองโต๊ะ</p>
+                      <p className="font-display font-medium text-slate-200 text-xs">{user.activity.bookings}</p>
                     </div>
-                    <div className="border-x border-white/5">
-                      <p className="text-ink-mute text-[10px]">ประมูล</p>
-                      <p className="font-display font-semibold text-neon-cyan">{user.activity.bids}</p>
+                    <div className="border-x border-white/[0.04]">
+                      <p className="text-slate-500 text-[9px]">ประมูล</p>
+                      <p className="font-display font-medium text-teal-300 text-xs">{user.activity.bids}</p>
                     </div>
                     <div>
-                      <p className="text-ink-mute text-[10px]">E-Tickets</p>
-                      <p className="font-display font-semibold text-gold">{user.activity.tickets}</p>
+                      <p className="text-slate-500 text-[9px]">E-Tickets</p>
+                      <p className="font-display font-medium text-amber-300 text-xs">{user.activity.tickets}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Actions */}
-                <div className="mt-5 flex items-center gap-2 border-t border-white/5 pt-3">
+                <div className="mt-4 flex items-center gap-2 border-t border-white/[0.04] pt-3">
                   <button
                     onClick={() => setSelectedUser(user)}
-                    className="flex-1 rounded-xl border border-white/10 bg-night-950/80 py-2 text-xs font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
+                    className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
                   >
                     ดูรายละเอียด
                   </button>
                   <button
                     onClick={() => handleSwitchUser(user)}
                     disabled={isCurrent}
-                    className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                    className={`rounded-xl px-3 py-1.5 text-xs font-medium transition ${
                       isCurrent
-                        ? "bg-white/5 text-ink-mute cursor-not-allowed"
-                        : "border border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20"
+                        ? "bg-white/[0.02] text-slate-500 cursor-not-allowed"
+                        : "border border-teal-500/30 bg-teal-500/[0.08] text-teal-300 hover:bg-teal-500/15"
                     }`}
-                    title="สลับการเข้าใช้งานสู่บัญชีนี้"
                   >
                     {isCurrent ? "ใช้งานอยู่" : "สลับล็อกอิน"}
                   </button>
@@ -601,87 +604,75 @@ export function ProfileDashboard() {
 
       {/* View Mode 2: Table View */}
       {!loading && viewMode === "table" && filteredUsers.length > 0 && (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-night-900/80 backdrop-blur">
+        <div className="mt-5 overflow-hidden rounded-2xl border border-white/[0.08] bg-night-900/50 backdrop-blur-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-white/10 bg-night-950/80 text-ink-mute">
+              <thead className="border-b border-white/[0.06] bg-night-950/60 text-slate-400">
                 <tr>
-                  <th className="px-5 py-4 font-semibold">ผู้ใช้งาน</th>
-                  <th className="px-4 py-4 font-semibold">อีเมล / เบอร์โทร</th>
-                  <th className="px-4 py-4 font-semibold">บทบาท</th>
-                  <th className="px-4 py-4 font-semibold">สถานะ</th>
-                  <th className="px-4 py-4 font-semibold">อายุ / วันเกิด</th>
-                  <th className="px-4 py-4 font-semibold">สถิติกิจกรรม</th>
-                  <th className="px-4 py-4 font-semibold">วันที่สร้าง</th>
-                  <th className="px-5 py-4 text-right font-semibold">จัดการ</th>
+                  <th className="px-5 py-3.5 font-medium">ผู้ใช้งาน</th>
+                  <th className="px-4 py-3.5 font-medium">อีเมล / เบอร์โทร</th>
+                  <th className="px-4 py-3.5 font-medium">บทบาท</th>
+                  <th className="px-4 py-3.5 font-medium">สถานะ</th>
+                  <th className="px-4 py-3.5 font-medium">อายุ</th>
+                  <th className="px-4 py-3.5 font-medium">กิจกรรม</th>
+                  <th className="px-5 py-3.5 text-right font-medium">จัดการ</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredUsers.map((user) => {
                   const isCurrent = currentUser?.id === user.id;
 
                   return (
                     <tr
                       key={user.id}
-                      className={`transition hover:bg-white/[0.02] ${
-                        isCurrent ? "bg-neon-cyan/[0.03]" : ""
+                      className={`transition-colors hover:bg-white/[0.02] ${
+                        isCurrent ? "bg-teal-500/[0.03]" : ""
                       }`}
                     >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2.5">
                           <UserAvatar name={user.fullName} role={user.role} size="sm" />
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{user.fullName}</span>
-                              {isCurrent && (
-                                <span className="rounded bg-neon-cyan/20 px-1.5 py-0.5 text-[9px] font-bold text-neon-cyan">
-                                  YOU
-                                </span>
-                              )}
-                            </div>
-                            <span className="font-mono text-ink-mute">@{user.username}</span>
+                            <span className="font-medium text-white">{user.fullName}</span>
+                            <span className="ml-1.5 font-mono text-[11px] text-slate-400">@{user.username}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="font-mono text-white">{user.email}</div>
-                        <div className="font-mono text-ink-mute">{user.phone}</div>
+                      <td className="px-4 py-3.5">
+                        <div className="font-mono text-slate-200">{user.email}</div>
+                        <div className="font-mono text-slate-400 text-[11px]">{user.phone}</div>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3.5">
                         <RoleBadge role={user.role} />
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3.5">
                         <StatusBadge status={user.status} />
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="text-white">อายุ {user.age} ปี</div>
-                        <div className="text-[11px] text-ink-mute">{formatBirthDate(user.birthDate)}</div>
+                      <td className="px-4 py-3.5">
+                        <div className="text-slate-200">{user.age} ปี</div>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2 text-ink-mute">
-                          <span title="จองโต๊ะ">🍸 {user.activity.bookings}</span>
-                          <span title="ประมูลโฮสต์">⚡ {user.activity.bids}</span>
-                          <span title="ตั๋ว E-Ticket">🎫 {user.activity.tickets}</span>
+                      <td className="px-4 py-3.5 text-slate-400">
+                        <div className="flex items-center gap-2.5 text-[11px]">
+                          <span>จอง {user.activity.bookings}</span>
+                          <span>ประมูล {user.activity.bids}</span>
+                          <span>ตั๋ว {user.activity.tickets}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-ink-mute">
-                        {formatThaiDate(user.createdAt)}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setSelectedUser(user)}
-                            className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-ink-mute hover:border-white/30 hover:text-white"
+                            className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5 hover:text-white"
                           >
-                            ดูรายละเอียด
+                            ดู
                           </button>
                           <button
                             onClick={() => handleSwitchUser(user)}
                             disabled={isCurrent}
-                            className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                            className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
                               isCurrent
-                                ? "bg-white/5 text-ink-mute cursor-not-allowed"
-                                : "border border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20"
+                                ? "bg-white/[0.02] text-slate-500 cursor-not-allowed"
+                                : "border border-teal-500/30 bg-teal-500/[0.08] text-teal-300 hover:bg-teal-500/15"
                             }`}
                           >
                             สลับ
@@ -697,7 +688,7 @@ export function ProfileDashboard() {
         </div>
       )}
 
-      {/* Modal 1: Account Details Modal (รายละเอียดของบัญชีทั้งหมด) */}
+      {/* Modal 1: Account Details Modal */}
       {selectedUser && (
         <AccountDetailModal
           user={selectedUser}
@@ -728,7 +719,7 @@ export function ProfileDashboard() {
           onCreated={(newUser) => {
             setUsers((prev) => [newUser, ...prev]);
             setIsCreateOpen(false);
-            showNotice(`สร้างโปรไฟล์ @${newUser.username} สำเร็จเรียบร้อย!`);
+            showNotice(`สร้างโปรไฟล์ @${newUser.username} สำเร็จเรียบร้อย`);
           }}
         />
       )}
@@ -737,9 +728,9 @@ export function ProfileDashboard() {
 }
 
 // -------------------------------------------------------------
-// Component: Full Account Detail Modal
+// Component: Full Account Detail Modal (Clean & Minimal)
 // -------------------------------------------------------------
-function AccountDetailModal({
+export function AccountDetailModal({
   user,
   isCurrent,
   onClose,
@@ -764,30 +755,33 @@ function AccountDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-md">
-      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/20 bg-night-900 p-6 shadow-2xl sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-night-900/95 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-ink-mute hover:bg-white/20 hover:text-white"
+          className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-slate-400 hover:bg-white/[0.12] hover:text-white"
+          aria-label="ปิดหน้าต่าง"
         >
-          ✕
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         {/* Modal Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <UserAvatar name={user.fullName} role={user.role} size="lg" />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-2xl font-bold text-white">{user.fullName}</h2>
+              <h2 className="font-display text-xl font-bold text-white">{user.fullName}</h2>
               {isCurrent && (
-                <span className="rounded-full bg-neon-cyan/20 border border-neon-cyan/50 px-2.5 py-0.5 text-xs font-semibold text-neon-cyan">
+                <span className="rounded-full bg-teal-500/10 border border-teal-500/30 px-2 py-0.5 text-[10px] font-medium text-teal-300">
                   เซสชันปัจจุบัน
                 </span>
               )}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="font-mono text-sm text-neon-cyan">@{user.username}</span>
+              <span className="font-mono text-xs text-slate-400">@{user.username}</span>
               <span className="text-white/20">·</span>
               <RoleBadge role={user.role} />
               <StatusBadge status={user.status} />
@@ -796,133 +790,133 @@ function AccountDetailModal({
         </div>
 
         {/* Modal Navigation Tabs */}
-        <div className="mt-6 flex border-b border-white/10 text-xs font-semibold text-ink-mute">
+        <div className="mt-5 flex border-b border-white/[0.08] text-xs font-medium text-slate-400">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`border-b-2 px-4 py-3 transition ${
+            className={`border-b-2 px-3.5 py-2.5 transition ${
               activeTab === "profile"
-                ? "border-neon-pink text-neon-pink"
+                ? "border-rose-400 text-rose-300"
                 : "border-transparent hover:text-white"
             }`}
           >
-            👤 ข้อมูลโปรไฟล์
+            ข้อมูลโปรไฟล์
           </button>
           <button
             onClick={() => setActiveTab("system")}
-            className={`border-b-2 px-4 py-3 transition ${
+            className={`border-b-2 px-3.5 py-2.5 transition ${
               activeTab === "system"
-                ? "border-neon-cyan text-neon-cyan"
+                ? "border-teal-400 text-teal-300"
                 : "border-transparent hover:text-white"
             }`}
           >
-            🔒 ระบบ & สิทธิ์
+            ระบบและสิทธิ์
           </button>
           <button
             onClick={() => setActiveTab("activity")}
-            className={`border-b-2 px-4 py-3 transition ${
+            className={`border-b-2 px-3.5 py-2.5 transition ${
               activeTab === "activity"
-                ? "border-gold text-gold"
+                ? "border-amber-400 text-amber-300"
                 : "border-transparent hover:text-white"
             }`}
           >
-            📊 สถิติกิจกรรม
+            สถิติกิจกรรม
           </button>
           <button
             onClick={() => setActiveTab("json")}
-            className={`border-b-2 px-4 py-3 transition ${
+            className={`border-b-2 px-3.5 py-2.5 transition ${
               activeTab === "json"
                 ? "border-white text-white"
                 : "border-transparent hover:text-white"
             }`}
           >
-            {`{ }`} Raw JSON
+            Raw JSON
           </button>
         </div>
 
         {/* Tab 1: Profile Details */}
         {activeTab === "profile" && (
-          <div className="mt-6 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">รหัสประจำตัว (User UUID)</span>
+          <div className="mt-5 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">รหัสประจำตัว (UUID)</span>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="font-mono text-xs text-white truncate max-w-[200px]">{user.id}</span>
+                  <span className="font-mono text-xs text-slate-200 truncate max-w-[190px]">{user.id}</span>
                   <button
                     onClick={() => copyToClipboard(user.id)}
-                    className="text-xs text-neon-cyan hover:underline"
+                    className="text-xs text-teal-300 hover:underline"
                   >
-                    {copied ? "คัดลอกแล้ว!" : "คัดลอก"}
+                    {copied ? "คัดลอกแล้ว" : "คัดลอก"}
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">อีเมล (Email)</span>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">อีเมล (Email)</span>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="font-mono text-xs text-white truncate max-w-[200px]">{user.email}</span>
+                  <span className="font-mono text-xs text-slate-200 truncate max-w-[190px]">{user.email}</span>
                   {user.emailVerifiedAt ? (
-                    <span className="text-[10px] text-emerald-400">✓ ยืนยันแล้ว</span>
+                    <span className="text-[10px] text-emerald-400 font-medium">[ยืนยันแล้ว]</span>
                   ) : (
-                    <span className="text-[10px] text-zinc-500">ยังไม่ยืนยัน</span>
+                    <span className="text-[10px] text-slate-500">[ยังไม่ยืนยัน]</span>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">เบอร์โทรศัพท์ (Phone)</span>
-                <p className="mt-1 font-mono text-sm text-white">{user.phone}</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">เบอร์โทรศัพท์</span>
+                <p className="mt-1 font-mono text-xs text-slate-200">{user.phone}</p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">วันเกิด และ อายุ</span>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">วันเกิด และ อายุ</span>
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">{formatBirthDate(user.birthDate)}</span>
-                  <span className="rounded bg-neon-cyan/20 px-2 py-0.5 text-xs text-neon-cyan">
+                  <span className="text-xs font-medium text-slate-200">{formatBirthDate(user.birthDate)}</span>
+                  <span className="rounded bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-medium text-teal-300">
                     อายุ {user.age} ปี
                   </span>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">วันที่สร้างบัญชี (Registered Date)</span>
-                <p className="mt-1 text-sm text-white">{formatThaiDate(user.createdAt)}</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">วันที่สร้างบัญชี</span>
+                <p className="mt-1 text-xs text-slate-200">{formatThaiDate(user.createdAt)}</p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">อัปเดตข้อมูลล่าสุด (Last Updated)</span>
-                <p className="mt-1 text-sm text-white">{formatThaiDate(user.updatedAt)}</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">อัปเดตล่าสุด</span>
+                <p className="mt-1 text-xs text-slate-200">{formatThaiDate(user.updatedAt)}</p>
               </div>
             </div>
 
             {/* Age Verification notice */}
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
-              <span className="font-semibold">✓ ผ่านเกณฑ์พระราชบัญญัติสถานบริการ:</span> ผู้ใช้งานมีอายุ {user.age} ปี (เกินเกณฑ์ขั้นต่ำ 20 ปีบริบูรณ์ สามารถเข้าสถานบริการ Babe Bar ได้ตามกฎหมาย)
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs text-emerald-300">
+              <span className="font-semibold">ผ่านเกณฑ์พระราชบัญญัติสถานบริการ:</span> ผู้ใช้งานมีอายุ {user.age} ปี (เกินเกณฑ์ขั้นต่ำ 20 ปีบริบูรณ์ สามารถเข้าสถานบริการ Babe Bar ได้ตามกฎหมาย)
             </div>
           </div>
         )}
 
         {/* Tab 2: System & Permissions */}
         {activeTab === "system" && (
-          <div className="mt-6 space-y-4">
-            <div className="rounded-xl border border-white/10 bg-night-950/60 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-mute">สิทธิ์ในระบบ (System Role)</span>
-              <p className="mt-1 text-sm text-white">
-                {user.role === "admin" && "👑 ผู้ดูแลระบบระดับสูงสุด: สิทธิ์จัดการทุกอย่าง ทั้งบัญชี โต๊ะ การประมูล และคอนฟิกระบบ"}
-                {user.role === "staff" && "🍸 พนักงานบริการ: สิทธิ์ในการเช็กอินลูกค้า ตรวจสอบการจอง และดูแลห้องประมูล"}
-                {user.role === "customer" && "🥂 สมาชิก/ลูกค้าทั่วไป: สิทธิ์จองโต๊ะ สั่งแพ็กเกจ ร่วมประมูลโฮสต์ และถือครอง E-Ticket"}
+          <div className="mt-5 space-y-3">
+            <div className="rounded-xl border border-white/[0.06] bg-night-950/50 p-3.5">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">สิทธิ์ในระบบ</span>
+              <p className="mt-1 text-xs text-slate-200">
+                {user.role === "admin" && "ผู้ดูแลระบบระดับสูงสุด: สิทธิ์จัดการทุกอย่าง ทั้งบัญชี โต๊ะ การประมูล และคอนฟิกระบบ"}
+                {user.role === "staff" && "พนักงานบริการ: สิทธิ์ในการเช็กอินลูกค้า ตรวจสอบการจอง และดูแลห้องประมูล"}
+                {user.role === "customer" && "สมาชิกและลูกค้าทั่วไป: สิทธิ์จองโต๊ะ สั่งแพ็กเกจ ร่วมประมูลโฮสต์ และถือครอง E-Ticket"}
               </p>
 
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs text-ink-mute">เปลี่ยนสิทธิ์เป็น:</span>
+              <div className="mt-2.5 flex items-center gap-2">
+                <span className="text-[11px] text-slate-400">เปลี่ยนสิทธิ์เป็น:</span>
                 {(["customer", "staff", "admin"] as const).map((r) => (
                   <button
                     key={r}
                     onClick={() => onRoleChange(r)}
                     disabled={user.role === r}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold capitalize ${
+                    className={`rounded-lg px-2 py-0.5 text-xs capitalize transition ${
                       user.role === r
-                        ? "bg-white/20 text-white cursor-default"
-                        : "border border-white/10 text-ink-mute hover:border-white/30 hover:text-white"
+                        ? "bg-white/[0.12] text-white"
+                        : "border border-white/10 text-slate-400 hover:text-white"
                     }`}
                   >
                     {r}
@@ -931,38 +925,38 @@ function AccountDetailModal({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">Stripe Customer ID</span>
-                <p className="mt-1 font-mono text-xs text-white">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">Stripe Customer ID</span>
+                <p className="mt-1 font-mono text-xs text-slate-300">
                   {user.stripeCustomerId || "ยังไม่มีข้อมูล (ยังไม่ผูกบัตร)"}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5">
-                <span className="text-xs text-ink-mute">สถานะการประมูล (Auction Status)</span>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3">
+                <span className="text-[11px] text-slate-400">สถานะการประมูล</span>
                 <p className="mt-1 text-xs">
                   {user.auctionBannedUntil ? (
                     <span className="text-rose-400">ถูกระงับประมูลจนถึง {formatThaiDate(user.auctionBannedUntil)}</span>
                   ) : (
-                    <span className="text-emerald-400">ปกติ (มีสิทธิ์ร่วมประมูลได้)</span>
+                    <span className="text-emerald-400">ปกติ (มีสิทธิ์ร่วมประมูล)</span>
                   )}
                 </p>
               </div>
             </div>
 
             {/* PDPA Consents */}
-            <div className="rounded-xl border border-white/5 bg-night-950/60 p-3.5 text-xs">
+            <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3 text-xs">
               <span className="font-semibold text-white">การยินยอมข้อกำหนด PDPA:</span>
-              <ul className="mt-2 space-y-1.5 text-ink-mute">
+              <ul className="mt-2 space-y-1 text-slate-400">
                 <li className="flex items-center gap-2">
-                  <span className="text-emerald-400">✓</span> ยอมรับเงื่อนไขการใช้บริการ (Terms of Service v1)
+                  <span className="text-emerald-400">[ผ่าน]</span> ยอมรับเงื่อนไขการใช้บริการ (Terms of Service v1)
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-emerald-400">✓</span> ยอมรับนโยบายความเป็นส่วนตัว (Privacy Policy v1)
+                  <span className="text-emerald-400">[ผ่าน]</span> ยอมรับนโยบายความเป็นส่วนตัว (Privacy Policy v1)
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-emerald-400">✓</span> ยืนยันอายุ 20 ปีบริบูรณ์ขึ้นไป (Age 20+ Compliance)
+                  <span className="text-emerald-400">[ผ่าน]</span> ยืนยันอายุ 20 ปีบริบูรณ์ขึ้นไป (Age 20+ Compliance)
                 </li>
               </ul>
             </div>
@@ -971,34 +965,34 @@ function AccountDetailModal({
 
         {/* Tab 3: Activity & Orders */}
         {activeTab === "activity" && (
-          <div className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/5 bg-night-950/80 p-4 text-center">
-                <span className="text-2xl">🍸</span>
-                <p className="mt-2 font-display text-2xl font-bold text-white">{user.activity.bookings}</p>
-                <p className="text-xs text-ink-mute">การจองโต๊ะ</p>
+          <div className="mt-5 space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/60 p-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400">การจองโต๊ะ</p>
+                <p className="mt-1 font-display text-2xl font-bold text-white">{user.activity.bookings}</p>
+                <p className="text-[10px] text-slate-500">รายการ</p>
               </div>
 
-              <div className="rounded-2xl border border-white/5 bg-night-950/80 p-4 text-center">
-                <span className="text-2xl">⚡</span>
-                <p className="mt-2 font-display text-2xl font-bold text-neon-cyan">{user.activity.bids}</p>
-                <p className="text-xs text-ink-mute">ครั้งที่เสนอราคา</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/60 p-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-teal-400">ครั้งที่เสนอราคา</p>
+                <p className="mt-1 font-display text-2xl font-bold text-teal-300">{user.activity.bids}</p>
+                <p className="text-[10px] text-slate-500">ครั้ง</p>
               </div>
 
-              <div className="rounded-2xl border border-white/5 bg-night-950/80 p-4 text-center">
-                <span className="text-2xl">🎫</span>
-                <p className="mt-2 font-display text-2xl font-bold text-gold">{user.activity.tickets}</p>
-                <p className="text-xs text-ink-mute">บัตร E-Ticket</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/60 p-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-amber-400">บัตร E-Ticket</p>
+                <p className="mt-1 font-display text-2xl font-bold text-amber-300">{user.activity.tickets}</p>
+                <p className="text-[10px] text-slate-500">ใบ</p>
               </div>
 
-              <div className="rounded-2xl border border-white/5 bg-night-950/80 p-4 text-center">
-                <span className="text-2xl">📦</span>
-                <p className="mt-2 font-display text-2xl font-bold text-neon-pink">{user.activity.packageOrders}</p>
-                <p className="text-xs text-ink-mute">แพ็กเกจที่สั่ง</p>
+              <div className="rounded-xl border border-white/[0.04] bg-night-950/60 p-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-rose-400">แพ็กเกจที่สั่ง</p>
+                <p className="mt-1 font-display text-2xl font-bold text-rose-300">{user.activity.packageOrders}</p>
+                <p className="text-[10px] text-slate-500">ออเดอร์</p>
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/5 bg-night-950/60 p-4 text-center text-xs text-ink-mute">
+            <div className="rounded-xl border border-white/[0.04] bg-night-950/50 p-3 text-center text-xs text-slate-400">
               บันทึกกิจกรรมในระบบ Babe Bar ทั้งหมดจะถูกเก็บรักษาอย่างปลอดภัยเพื่อรองรับการตรวจเช็ก E-Ticket และรายงานสถิติของร้าน
             </div>
           </div>
@@ -1006,54 +1000,54 @@ function AccountDetailModal({
 
         {/* Tab 4: Raw JSON */}
         {activeTab === "json" && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between pb-2 text-xs text-ink-mute">
+          <div className="mt-5">
+            <div className="flex items-center justify-between pb-2 text-xs text-slate-400">
               <span>ข้อมูลบัญชีรูปแบบ JSON ทั้งหมด:</span>
               <button
                 onClick={() => copyToClipboard(JSON.stringify(user, null, 2))}
-                className="text-neon-cyan hover:underline"
+                className="text-teal-300 hover:underline"
               >
-                {copied ? "คัดลอก JSON แล้ว!" : "คัดลอกทั้งหมด"}
+                {copied ? "คัดลอก JSON แล้ว" : "คัดลอกทั้งหมด"}
               </button>
             </div>
-            <pre className="max-h-72 overflow-auto rounded-xl border border-white/10 bg-night-950 p-4 font-mono text-xs text-ink-mute">
+            <pre className="max-h-64 overflow-auto rounded-xl border border-white/[0.06] bg-night-950 p-3 font-mono text-[11px] text-slate-400">
               {JSON.stringify(user, null, 2)}
             </pre>
           </div>
         )}
 
         {/* Footer Actions */}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
-          <div className="flex items-center gap-2">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+          <div>
             <button
               onClick={onToggleStatus}
-              className={`rounded-xl border px-4 py-2.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-medium transition ${
                 user.status === "active"
-                  ? "border-rose-500/50 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
-                  : "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                  ? "border-rose-500/30 bg-rose-500/[0.08] text-rose-300 hover:bg-rose-500/15"
+                  : "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/15"
               }`}
             >
-              {user.status === "active" ? "ระงับการใช้งาน (Suspend)" : "ปลดระงับ (Activate)"}
+              {user.status === "active" ? "ระงับการใช้งาน" : "ปลดระงับการใช้งาน"}
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-ink-mute hover:text-white"
+              className="rounded-xl border border-white/10 px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white"
             >
-              ปิดหน้าต่าง
+              ปิด
             </button>
             <button
               onClick={onSwitch}
               disabled={isCurrent}
-              className={`rounded-xl px-5 py-2.5 text-xs font-semibold transition ${
+              className={`rounded-xl px-4 py-1.5 text-xs font-semibold transition ${
                 isCurrent
-                  ? "bg-white/5 text-ink-mute cursor-not-allowed"
-                  : "btn-primary"
+                  ? "bg-white/[0.02] text-slate-500 cursor-not-allowed"
+                  : "btn-primary !min-h-8"
               }`}
             >
-              {isCurrent ? "ใช้งานบัญชีนี้อยู่แล้ว" : "สลับเข้าสู่ระบบด้วยบัญชีนี้"}
+              {isCurrent ? "ใช้งานบัญชีนี้อยู่แล้ว" : "สลับเข้าสู่ระบบ"}
             </button>
           </div>
         </div>
@@ -1106,110 +1100,113 @@ function CreateAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-md">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/20 bg-night-900 p-6 shadow-2xl sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
+      <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-night-900/95 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-ink-mute hover:bg-white/20 hover:text-white"
+          className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-slate-400 hover:bg-white/[0.12] hover:text-white"
+          aria-label="ปิดหน้าต่าง"
         >
-          ✕
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
-        <span className="text-xs font-semibold tracking-widest text-neon-pink uppercase">
-          Babe Bar Accounts
+        <span className="text-[10px] font-semibold tracking-widest text-rose-400 uppercase">
+          New Account
         </span>
-        <h2 className="mt-1 font-display text-2xl font-bold text-white">สร้างโปรไฟล์บัญชีใหม่</h2>
-        <p className="mt-1 text-xs text-ink-mute">
-          เพิ่มบัญชีผู้ใช้ใหม่เข้าสู่ฐานข้อมูลระบบ พร้อมกำหนดบทบาทและสิทธิ์
+        <h2 className="mt-1 font-display text-xl font-bold text-white">สร้างโปรไฟล์บัญชีใหม่</h2>
+        <p className="mt-0.5 text-xs text-slate-400">
+          เพิ่มบัญชีผู้ใช้งานใหม่เข้าสู่ระบบ Babe Bar
         </p>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300">
+          <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/[0.08] p-3 text-xs text-rose-300">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3 text-xs">
           <div>
-            <label className="block font-semibold text-white">ชื่อ-นามสกุล</label>
+            <label className="block font-medium text-slate-300">ชื่อ-นามสกุล</label>
             <input
               type="text"
               required
               placeholder="เช่น นายธนากร มั่งมี"
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 text-white outline-none focus:border-neon-cyan"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 text-white outline-none focus:border-rose-400"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block font-semibold text-white">Username</label>
+              <label className="block font-medium text-slate-300">Username</label>
               <input
                 type="text"
                 required
-                placeholder="เช่น tanakorn_99"
+                placeholder="tanakorn_99"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 font-mono text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 font-mono text-white outline-none focus:border-rose-400"
               />
             </div>
             <div>
-              <label className="block font-semibold text-white">เบอร์โทรศัพท์</label>
+              <label className="block font-medium text-slate-300">เบอร์โทรศัพท์</label>
               <input
                 type="tel"
                 required
-                placeholder="เช่น 0891234567"
+                placeholder="0891234567"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 font-mono text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 font-mono text-white outline-none focus:border-rose-400"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-white">อีเมล</label>
+            <label className="block font-medium text-slate-300">อีเมล</label>
             <input
               type="email"
               required
               placeholder="tanakorn@example.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 font-mono text-white outline-none focus:border-neon-cyan"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 font-mono text-white outline-none focus:border-rose-400"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block font-semibold text-white">วันเกิด (ต้องอายุ &gt;= 20 ปี)</label>
+              <label className="block font-medium text-slate-300">วันเกิด (อายุ 20+)</label>
               <input
                 type="date"
                 required
                 value={birthInput}
                 onChange={(e) => setBirthInput(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 text-white outline-none focus:border-rose-400"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-white">รหัสผ่านเริ่มต้น</label>
+              <label className="block font-medium text-slate-300">รหัสผ่านเริ่มต้น</label>
               <input
                 type="password"
                 required
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3.5 py-2 text-white outline-none focus:border-rose-400"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block font-semibold text-white">บทบาท (Role)</label>
+              <label className="block font-medium text-slate-300">บทบาท (Role)</label>
               <select
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3 py-2 text-white outline-none focus:border-rose-400"
               >
                 <option value="customer">Customer (ลูกค้า)</option>
                 <option value="staff">Staff (พนักงาน)</option>
@@ -1218,11 +1215,11 @@ function CreateAccountModal({
             </div>
 
             <div>
-              <label className="block font-semibold text-white">สถานะ (Status)</label>
+              <label className="block font-medium text-slate-300">สถานะ</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as UserStatus })}
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-night-950 px-3.5 py-2.5 text-white outline-none focus:border-neon-cyan"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-night-950/70 px-3 py-2 text-white outline-none focus:border-rose-400"
               >
                 <option value="active">Active (ปกติ)</option>
                 <option value="suspended">Suspended (ระงับ)</option>
@@ -1230,18 +1227,18 @@ function CreateAccountModal({
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-end gap-3 pt-3">
+          <div className="mt-5 flex items-center justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/10 px-4 py-2.5 text-ink-mute hover:text-white"
+              className="rounded-xl border border-white/10 px-3.5 py-1.5 text-slate-400 hover:text-white"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary"
+              className="btn-primary !min-h-9"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึกและสร้างบัญชี"}
             </button>
@@ -1251,4 +1248,3 @@ function CreateAccountModal({
     </div>
   );
 }
-

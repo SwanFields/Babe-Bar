@@ -1,6 +1,32 @@
-@import url("https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer base { body { @apply bg-night-950 text-white font-body; margin: 0; } }
-@layer components { .card { @apply rounded-2xl border border-white/10 bg-night-800/70 backdrop-blur p-6; } .btn-primary { @apply min-h-11 rounded-xl bg-neon-pink px-5 py-3 font-semibold shadow-glowPink transition hover:brightness-110; } .btn-outline { @apply min-h-11 rounded-xl border border-neon-pink/70 px-5 py-3 font-semibold transition hover:bg-neon-pink/10; } }
+
+@layer base {
+  body {
+    @apply bg-night-950 text-slate-100 font-body antialiased selection:bg-rose-500/20 selection:text-rose-200;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/[0.08] bg-night-900/60 backdrop-blur-md p-6 transition-all duration-200 hover:border-white/15;
+  }
+  .card-subtle {
+    @apply rounded-xl border border-white/[0.06] bg-night-950/50 p-4;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center min-h-11 rounded-xl bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-rose-400 hover:shadow-glowPink active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center min-h-11 rounded-xl border border-white/15 bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-slate-200 transition-all duration-150 hover:border-white/30 hover:bg-white/[0.08] hover:text-white active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white active:scale-[0.98];
+  }
+  .field {
+    @apply min-h-11 w-full rounded-xl border border-white/10 bg-night-950/70 px-4 text-sm text-white outline-none transition focus:border-teal-400;
+  }
+}

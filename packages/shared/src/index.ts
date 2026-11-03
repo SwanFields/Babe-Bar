@@ -45,9 +45,18 @@ export const bookingSchema = z.object({
 });
 
 export const bidSchema = z.object({
-  amountSatang: z.number().int().positive(),
+  amountDrinks: z.number().int().min(1, "ต้องบิดอย่างน้อย 1 ดริ้ง"),
   paymentMethodId: z.string().uuid()
 });
+export const setupPaymentMethodSchema = z.object({
+  paymentMethodId: z.string().startsWith("pm_", "PaymentMethod จาก Stripe ไม่ถูกต้อง")
+});
+export const packageOrderSchema = z.object({ packageId: z.number().int().positive(), useDate: z.string().date().optional() });
+export const checkoutSchema = z.object({ kind: z.enum(["booking", "package"]), id: z.string().min(1) });
+export const auctionScheduleSchema = z.object({
+  opensAt: z.coerce.date(),
+  closesAt: z.coerce.date()
+}).refine((value) => value.closesAt > value.opensAt, { message: "เวลาปิดต้องหลังเวลาเปิด" });
 
 export type Role = z.infer<typeof roleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
