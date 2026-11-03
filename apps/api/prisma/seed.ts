@@ -26,6 +26,7 @@ async function main() {
     { zoneId: restroom.id, tableNo: "R1", capacityMax: 4 },
     { zoneId: restroom.id, tableNo: "R2", capacityMax: 6 },
     { zoneId: restroom.id, tableNo: "R3", capacityMax: 8 }
+    
   ];
   for (const table of tables) {
     await prisma.venueTable.upsert({ where: { tableNo: table.tableNo }, update: table, create: table });
