@@ -1,0 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base { body { @apply bg-night-950 text-white font-body; margin: 0; } }
+@layer components { .card { @apply rounded-2xl border border-white/10 bg-night-800/70 backdrop-blur p-6; } .btn-primary { @apply min-h-11 rounded-xl bg-neon-pink px-5 py-3 font-semibold shadow-glowPink transition hover:brightness-110; } .btn-outline { @apply min-h-11 rounded-xl border border-neon-pink/70 px-5 py-3 font-semibold transition hover:bg-neon-pink/10; } }
