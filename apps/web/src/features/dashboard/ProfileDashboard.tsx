@@ -187,16 +187,46 @@ export function ProfileDashboard() {
 
   // Toggle User Status
   const handleToggleStatus = async (user: UserProfileDto) => {
-    const newStatus: UserStatus = user.status === "active" ? "suspended" : "active";
-    try {
-      const res = await api.patch(`/users/${user.id}`, { status: newStatus });
-      setUsers((prev) => prev.map((u) => (u.id === user.id ? res.data : u)));
-      if (selectedUser?.id === user.id) setSelectedUser(res.data);
-      showNotice(`ปรับสถานะของ @${user.username} เป็น ${newStatus} แล้ว`);
-    } catch (e: any) {
-      showNotice(e?.response?.data?.error ?? "ไม่สามารถเปลี่ยนสถานะได้");
+  const newStatus: UserStatus =
+    user.status === "active"
+      ? "suspended"
+      : "active";
+
+  const confirmed = window.confirm(
+    user.status === "active"
+      ? `ต้องการระงับบัญชี @${user.username} ใช่หรือไม่?`
+      : `ต้องการปลดระงับบัญชี @${user.username} ใช่หรือไม่?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const res = await api.patch(
+      `/users/${user.id}`,
+      { status: newStatus }
+    );
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id ? res.data : u
+      )
+    );
+
+    if (selectedUser?.id === user.id) {
+      setSelectedUser(res.data);
     }
-  };
+
+    showNotice(
+      `ปรับสถานะของ @${user.username} เป็น ${newStatus} แล้ว`
+    );
+
+  } catch (e: any) {
+    showNotice(
+      e?.response?.data?.error ??
+      "ไม่สามารถเปลี่ยนสถานะได้"
+    );
+  }
+};
 
   // Filtered & Sorted list
   const filteredUsers = useMemo(() => {
@@ -697,15 +727,38 @@ export function ProfileDashboard() {
           }}
           onToggleStatus={() => handleToggleStatus(selectedUser)}
           onRoleChange={async (newRole) => {
-            try {
-              const res = await api.patch(`/users/${selectedUser.id}`, { role: newRole });
-              setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? res.data : u)));
-              setSelectedUser(res.data);
-              showNotice(`เปลี่ยนบทบาทเป็น ${newRole} สำเร็จ`);
-            } catch (e: any) {
-              showNotice(e?.response?.data?.error ?? "ไม่สามารถเปลี่ยนบทบาทได้");
-            }
-          }}
+
+  const confirmed = window.confirm(
+    `ต้องการเปลี่ยนสิทธิ์ของ ${selectedUser?.fullName} เป็น ${newRole} ใช่หรือไม่?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const res = await api.patch(
+      `/users/${selectedUser.id}`,
+      { role: newRole }
+    );
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === selectedUser.id ? res.data : u
+      )
+    );
+
+    setSelectedUser(res.data);
+
+    showNotice(
+      `เปลี่ยนบทบาทเป็น ${newRole} สำเร็จ`
+    );
+
+  } catch (e: any) {
+    showNotice(
+      e?.response?.data?.error ??
+      "ไม่สามารถเปลี่ยนบทบาทได้"
+    );
+  }
+}}
         />
       )}
 
@@ -1017,15 +1070,27 @@ export function AccountDetailModal({
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
           <div>
             <button
-              onClick={onToggleStatus}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-medium transition ${
-                user.status === "active"
-                  ? "border-rose-500/30 bg-rose-500/[0.08] text-rose-300 hover:bg-rose-500/15"
-                  : "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/15"
-              }`}
-            >
-              {user.status === "active" ? "ระงับการใช้งาน" : "ปลดระงับการใช้งาน"}
-            </button>
+  onClick={() => {
+    const confirmed = window.confirm(
+      user.status === "active"
+        ? `⚠️ ต้องการระงับบัญชี @${user.username} ใช่หรือไม่?\n\nผู้ใช้จะไม่สามารถเข้าสู่ระบบได้จนกว่าจะปลดระงับ`
+        : `✅ ต้องการปลดระงับบัญชี @${user.username} ใช่หรือไม่?`
+    );
+
+    if (confirmed) {
+      onToggleStatus();
+    }
+  }}
+  className={`rounded-xl border px-3.5 py-1.5 text-xs font-medium transition ${
+    user.status === "active"
+      ? "border-rose-500/30 bg-rose-500/[0.08] text-rose-300 hover:bg-rose-500/15"
+      : "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/15"
+  }`}
+>
+  {user.status === "active"
+    ? "ระงับการใช้งาน"
+    : "ปลดระงับการใช้งาน"}
+</button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -1079,6 +1144,11 @@ function CreateAccountModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const confirmed = window.confirm(
+    "ต้องการสร้างบัญชีผู้ใช้งานใหม่ใช่หรือไม่?"
+    );
+
+    if (!confirmed) return; 
     setError(null);
     setSubmitting(true);
 
