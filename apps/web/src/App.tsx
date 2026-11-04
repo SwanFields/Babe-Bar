@@ -241,16 +241,16 @@ function Hosts() {
             Host Selection
           </span>
           <h1 className="mt-5 font-display text-4xl font-bold leading-tight text-white sm:text-6xl">
-            พบกับ <span className="text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,.9)]">ดาวเด่น</span>
-            <br />ประจำค่ำคืนนี้
+            Host <span className="text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,.9)]">ดาวเด่น</span>
+            <br /><span className="text-yellow-400 drop-shadow-[0_0_8px_rgba(800,180,30,.9)]">BARHOST</span> Daily Lineup
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
-            เลือกทำความรู้จัก Host ที่ใช่! กดที่การ์ดเพื่อดูโปรไฟล์แบบเต็มและแคปชั่นสุดพิเศษ
+            เลือกทำความรู้จัก Host ที่ทัชใจ! กดที่การ์ดเพื่อดูโปรไฟล์แบบเต็มและแคปชั่นสุดพิเศษ
           </p>
         </div>
         <div className="relative mt-8 flex flex-wrap gap-3 text-xs text-slate-300">
-          <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2">คัดสรร Host คุณภาพ</span>
-          <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2">ภาพโปรไฟล์จริง</span>
+          <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2">Host คุณภาพ</span>
+          <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2">โปรไฟล์จริง</span>
           <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2">กดการ์ดเพื่อดูรายละเอียด</span>
         </div>
       </div>
@@ -258,7 +258,7 @@ function Hosts() {
       <div className="mb-5 mt-12 flex items-end justify-between gap-4">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-teal-300">Tonight's lineup</p>
-          <h2 className="mt-2 font-display text-2xl font-semibold text-white">เลือก Host ที่คุณชอบ</h2>
+          <h2 className="mt-2 font-display text-2xl font-semibold text-white">เลือก Host ที่ทัชใจ</h2>
         </div>
         <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-slate-400">{hosts.length} คน</span>
       </div>

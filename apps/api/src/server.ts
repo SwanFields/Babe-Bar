@@ -36,7 +36,14 @@ const hostUploadDir = path.resolve("uploads", "hosts");
 fs.mkdirSync(hostUploadDir, { recursive: true });
 const hostUpload = multer({
   storage: multer.diskStorage({
-    destination: hostUploadDir,
+    destination: (_req, _file, callback) => {
+      try {
+        fs.mkdirSync(hostUploadDir, { recursive: true });
+        callback(null, hostUploadDir);
+      } catch (error) {
+        callback(error instanceof Error ? error : new Error("ไม่สามารถสร้างโฟลเดอร์เก็บรูปโฮสต์ได้"), hostUploadDir);
+      }
+    },
     filename: (_req, file, callback) => {
       const extension = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" }[file.mimetype] ?? "";
       callback(null, `${crypto.randomBytes(16).toString("hex")}${extension}`);
@@ -485,7 +492,7 @@ app.get("/api/booking/availability", async (req, res, next) => {
 app.get("/api/auction/today", async (_req, res, next) => {
   try {
     const date = businessDate();
-    let session = await prisma.auctionSession.findUnique({ where: { businessDate: new Date(`${date}T00:00:00Z`) }, include: { items: { include: { host: true } } } });
+    let session = await prisma.auctionSession.findUnique({ where: { businessDate: new Date(`${date}T00:00:00Z`) }, include: { items: { include: { host: true }, orderBy: { sortOrder: "asc" } } } });
     if (!session) {
       const hosts = await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" }, take: 5 });
       if (hosts.length < 5) throw Object.assign(new Error("ยังมีโฮสต์ไม่ครบ 5 คนสำหรับการประมูลวันนี้"), { status: 409 });
@@ -498,7 +505,7 @@ app.get("/api/auction/today", async (_req, res, next) => {
           opensAt,
           closesAt,
           status: now >= closesAt ? "closed" : now >= opensAt ? "open" : "scheduled",
-          items: { create: hosts.map((host) => ({ hostId: host.id, startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0 })) }
+          items: { create: hosts.map((host, sortOrder) => ({ hostId: host.id, sortOrder, startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0 })) }
         },
         include: { items: { include: { host: true } } }
       });
@@ -506,7 +513,7 @@ app.get("/api/auction/today", async (_req, res, next) => {
       const now = new Date();
       const nextStatus = now >= session.closesAt ? "closed" : now >= session.opensAt ? "open" : "scheduled";
       if (session.status !== nextStatus && session.status !== "settled") {
-        session = await prisma.auctionSession.update({ where: { id: session.id }, data: { status: nextStatus }, include: { items: { include: { host: true } } } });
+        session = await prisma.auctionSession.update({ where: { id: session.id }, data: { status: nextStatus }, include: { items: { include: { host: true }, orderBy: { sortOrder: "asc" } } } });
       }
     }
     res.json({
@@ -537,13 +544,22 @@ app.get("/api/auction/payment-methods", requireAuth, async (req: AuthRequest, re
   } catch (error) { next(error); }
 });
 
+app.get("/api/auction/admin/hosts", requireAuth, requireRole("admin"), async (_req, res, next) => {
+  try {
+    res.json(await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" } }));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/auction/admin/schedule", requireAuth, requireRole("admin"), validate(auctionScheduleSchema), async (req: AuthRequest, res, next) => {
   try {
     const opensAt = new Date(req.body.opensAt);
     const closesAt = new Date(req.body.closesAt);
     const date = businessDate(opensAt);
-    const hosts = await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" }, take: 5 });
-    if (hosts.length < 5) throw Object.assign(new Error("ต้องมีโฮสต์อย่างน้อย 5 คนก่อนตั้งเวลาประมูล"), { status: 409 });
+    const hostIds = [...new Set(req.body.hostIds as number[])];
+    const hosts = await prisma.host.findMany({ where: { id: { in: hostIds }, isActive: true } });
+    if (hosts.length !== hostIds.length) throw Object.assign(new Error("พบโฮสต์บางคนไม่พร้อมสำหรับการประมูล"), { status: 409 });
     const session = await prisma.auctionSession.upsert({
       where: { businessDate: new Date(`${date}T00:00:00Z`) },
       update: { opensAt, closesAt, status: "scheduled" },
@@ -552,13 +568,28 @@ app.post("/api/auction/admin/schedule", requireAuth, requireRole("admin"), valid
         opensAt,
         closesAt,
         status: "scheduled",
-        items: { create: hosts.map((host) => ({ hostId: host.id })) }
+        items: { create: hostIds.map((hostId, sortOrder) => ({ hostId, sortOrder })) }
       },
       include: { items: { include: { host: true } } }
     });
-    await prisma.auctionItem.updateMany({
-      where: { sessionId: session.id },
-      data: { status: "open", startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0, leadingUserId: null, winnerUserId: null }
+    await prisma.$transaction(async (tx) => {
+      await tx.auctionItem.updateMany({
+        where: { sessionId: session.id, hostId: { notIn: hostIds } },
+        data: { status: "closed" }
+      });
+      for (const [sortOrder, hostId] of hostIds.entries()) {
+        const existing = await tx.auctionItem.findFirst({ where: { sessionId: session.id, hostId } });
+        if (existing) {
+          await tx.auctionItem.update({
+            where: { id: existing.id },
+            data: { sortOrder, status: "open", startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0, leadingUserId: null, winnerUserId: null }
+          });
+        } else {
+          await tx.auctionItem.create({
+            data: { sessionId: session.id, hostId, sortOrder, startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0 }
+          });
+        }
+      }
     });
     res.json(session);
   } catch (error) { next(error); }

@@ -55,7 +55,8 @@ export const packageOrderSchema = z.object({ packageId: z.number().int().positiv
 export const checkoutSchema = z.object({ kind: z.enum(["booking", "package"]), id: z.string().min(1) });
 export const auctionScheduleSchema = z.object({
   opensAt: z.coerce.date(),
-  closesAt: z.coerce.date()
+  closesAt: z.coerce.date(),
+  hostIds: z.array(z.number().int().positive()).min(1, "กรุณาเลือกโฮสต์อย่างน้อย 1 คน").max(20, "เลือกโฮสต์ได้ไม่เกิน 20 คน")
 }).refine((value) => value.closesAt > value.opensAt, { message: "เวลาปิดต้องหลังเวลาเปิด" });
 
 export type Role = z.infer<typeof roleSchema>;

@@ -255,6 +255,7 @@ model AuctionItem {
   startPriceSatang   Int               @default(0)
   minIncrementSatang Int               @default(25000)
   currentPriceSatang Int               @default(0)
+  sortOrder          Int               @default(0)
   leadingUserId      String?           @db.Uuid
   winnerUserId       String?           @db.Uuid
   status             AuctionItemStatus @default(open)
