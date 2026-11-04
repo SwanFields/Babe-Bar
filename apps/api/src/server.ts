@@ -24,11 +24,27 @@ import { businessDate } from "./lib/time";
 import { settleAuctionSession, startJobs } from "./jobs";
 import { userStore } from "./lib/userStore";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import Stripe from "stripe";
+import multer from "multer";
 
 const prisma = new PrismaClient();
 const app = express();
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const hostUploadDir = path.resolve("uploads", "hosts");
+fs.mkdirSync(hostUploadDir, { recursive: true });
+const hostUpload = multer({
+  storage: multer.diskStorage({
+    destination: hostUploadDir,
+    filename: (_req, file, callback) => {
+      const extension = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" }[file.mimetype] ?? "";
+      callback(null, `${crypto.randomBytes(16).toString("hex")}${extension}`);
+    }
+  }),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => callback(null, ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype))
+});
 
 async function ensureStripeCustomer(user: { id: string; email: string; fullName: string; stripeCustomerId: string | null }) {
   if (!stripe) throw Object.assign(new Error("ยังไม่ได้ตั้งค่า Stripe Test Mode"), { status: 503 });
@@ -45,8 +61,9 @@ async function ensureStripeCustomer(user: { id: string; email: string; fullName:
   return customer.id;
 }
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({ origin: process.env.WEB_ORIGIN ?? "http://localhost:5173", credentials: true }));
+app.use("/uploads", express.static(path.resolve("uploads")));
 app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), async (req, res) => {
   const signature = req.headers["stripe-signature"];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -338,13 +355,103 @@ app.get("/api/packages", async (_req, res, next) => {
 
 app.get("/api/hosts", async (_req, res, next) => {
   try {
-    res.json(await prisma.host.findMany({ where: { isActive: true } }));
+    res.json(await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" } }));
   } catch {
     // Fallback sample hosts if database is offline
     res.json([
       { id: 1, stageName: "Luna", bio: "The neon star" },
       { id: 2, stageName: "Mimi", bio: "Good vibes only" }
     ]);
+  }
+});
+
+app.get("/api/admin/hosts", requireAuth, requireRole("admin"), async (_req, res, next) => {
+  try {
+    res.json(await prisma.host.findMany({ orderBy: { id: "asc" } }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/hosts", requireAuth, requireRole("admin"), async (req, res, next) => {
+  try {
+    const stageName = typeof req.body.stageName === "string" ? req.body.stageName.trim() : "";
+    const firstName = typeof req.body.firstName === "string" ? req.body.firstName.trim() : "";
+    const lastName = typeof req.body.lastName === "string" ? req.body.lastName.trim() : "";
+    const nickname = typeof req.body.nickname === "string" ? req.body.nickname.trim() : "";
+    const age = Number(req.body.age);
+    const heightCm = Number(req.body.heightCm);
+    const caption = typeof req.body.caption === "string" ? req.body.caption.trim() : "";
+    const bio = typeof req.body.bio === "string" ? req.body.bio.trim() : null;
+    if (!stageName || stageName.length > 60 || !firstName || !lastName || !nickname || !caption ||
+      !Number.isInteger(age) || age < 20 || age > 100 || !Number.isInteger(heightCm) || heightCm < 100 || heightCm > 250 ||
+      (bio && bio.length > 1000)) {
+      throw Object.assign(new Error("กรุณากรอกข้อมูลโฮสต์ให้ครบถ้วนและถูกต้อง"), { status: 400 });
+    }
+    const host = await prisma.host.create({ data: { stageName, firstName, lastName, nickname, age, heightCm, caption, bio: bio || null } });
+    res.status(201).json(host);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/admin/hosts/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) throw Object.assign(new Error("รหัสโฮสต์ไม่ถูกต้อง"), { status: 400 });
+    const data: { stageName?: string; bio?: string | null; isActive?: boolean } = {};
+    const profileFields = ["firstName", "lastName", "nickname", "age", "heightCm", "caption"] as const;
+    for (const field of profileFields) {
+      if (req.body[field] === undefined) continue;
+      if (["firstName", "lastName", "nickname", "caption"].includes(field) && (typeof req.body[field] !== "string" || !req.body[field].trim())) {
+        throw Object.assign(new Error("รายละเอียดโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      }
+      if (field === "age" && (!Number.isInteger(Number(req.body[field])) || Number(req.body[field]) < 20 || Number(req.body[field]) > 100)) {
+        throw Object.assign(new Error("อายุโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      }
+      if (field === "heightCm" && (!Number.isInteger(Number(req.body[field])) || Number(req.body[field]) < 100 || Number(req.body[field]) > 250)) {
+        throw Object.assign(new Error("ส่วนสูงโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      }
+      (data as Record<string, unknown>)[field] = typeof req.body[field] === "string" ? req.body[field].trim() : Number(req.body[field]);
+    }
+    if (req.body.stageName !== undefined) {
+      if (typeof req.body.stageName !== "string" || !req.body.stageName.trim() || req.body.stageName.trim().length > 60) {
+        throw Object.assign(new Error("ชื่อโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      }
+      data.stageName = req.body.stageName.trim();
+    }
+    if (req.body.bio !== undefined) {
+      if (req.body.bio !== null && (typeof req.body.bio !== "string" || req.body.bio.trim().length > 1000)) {
+        throw Object.assign(new Error("ประวัติโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      }
+      data.bio = typeof req.body.bio === "string" ? req.body.bio.trim() || null : null;
+    }
+    if (req.body.isActive !== undefined) {
+      if (typeof req.body.isActive !== "boolean") throw Object.assign(new Error("สถานะโฮสต์ไม่ถูกต้อง"), { status: 400 });
+      data.isActive = req.body.isActive;
+    }
+    res.json(await prisma.host.update({ where: { id }, data }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/hosts/:id/photo", requireAuth, requireRole("admin"), hostUpload.single("photo"), async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!req.file || !Number.isInteger(id)) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      throw Object.assign(new Error("รองรับเฉพาะ JPG, PNG หรือ WEBP ขนาดไม่เกิน 3MB"), { status: 400 });
+    }
+    const existing = await prisma.host.findUnique({ where: { id }, select: { photoUrl: true } });
+    if (!existing) {
+      fs.unlinkSync(req.file.path);
+      throw Object.assign(new Error("ไม่พบโฮสต์"), { status: 404 });
+    }
+    const host = await prisma.host.update({ where: { id }, data: { photoUrl: `/uploads/hosts/${req.file.filename}` } });
+    res.json(host);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -404,7 +511,7 @@ app.get("/api/auction/today", async (_req, res, next) => {
     }
     res.json({
       ...session,
-      items: session.items.map((item) => ({
+      items: session.items.filter((item) => item.host.isActive).map((item) => ({
         ...item,
         currentDrinks: Math.floor(item.currentPriceSatang / 25000),
         bidUnitSatang: 25000
@@ -648,6 +755,45 @@ app.get("/api/tickets", requireAuth, async (req: AuthRequest, res, next) => {
       return { ...ticket, payment };
     }));
     res.json(withPayment);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/tickets/redeem", requireAuth, requireRole("staff", "admin"), async (req: AuthRequest, res, next) => {
+  try {
+    const ticketCode = String(req.body?.ticketCode ?? "").trim();
+    if (!ticketCode) throw Object.assign(new Error("กรุณาระบุรหัส Ticket"), { status: 400 });
+
+    const ticket = await prisma.eTicket.findUnique({ where: { ticketCode } });
+    if (!ticket) throw Object.assign(new Error("ไม่พบ Ticket นี้ในระบบ"), { status: 404 });
+    if (ticket.status === "used") throw Object.assign(new Error("Ticket นี้ถูกใช้งานไปแล้ว"), { status: 409 });
+    if (ticket.status === "void") throw Object.assign(new Error("Ticket นี้ถูกยกเลิกแล้ว"), { status: 409 });
+
+    const now = new Date();
+    if (ticket.validUntil < now) {
+      await prisma.eTicket.update({ where: { id: ticket.id }, data: { status: "expired" } });
+      throw Object.assign(new Error("Ticket นี้หมดอายุแล้ว"), { status: 409 });
+    }
+    if (ticket.validFrom > now) throw Object.assign(new Error("Ticket นี้ยังไม่ถึงเวลาใช้งาน"), { status: 409 });
+
+    const redeemed = await prisma.$transaction(async (tx) => {
+      const updated = await tx.eTicket.updateMany({
+        where: { id: ticket.id, status: "active" },
+        data: { status: "used" }
+      });
+      if (!updated.count) throw Object.assign(new Error("Ticket นี้ถูกใช้งานไปแล้ว"), { status: 409 });
+
+      await tx.ticketRedemption.create({
+        data: { ticketId: ticket.id, staffId: req.user!.id }
+      });
+      return tx.eTicket.findUnique({
+        where: { id: ticket.id },
+        include: { redemption: true, packageOrder: { include: { package: true } }, booking: true }
+      });
+    });
+
+    res.json({ message: "ยืนยันการใช้ Ticket สำเร็จ", ticket: redeemed });
   } catch (error) {
     next(error);
   }

@@ -1,0 +1,7 @@
+ALTER TABLE "Host"
+ADD COLUMN "firstName" TEXT,
+ADD COLUMN "lastName" TEXT,
+ADD COLUMN "nickname" TEXT,
+ADD COLUMN "age" INTEGER,
+ADD COLUMN "heightCm" INTEGER,
+ADD COLUMN "caption" TEXT;

@@ -4,9 +4,11 @@ import type { UserProfileDto } from "@babe-bar/shared";
 import { useAuth } from "./AuthContext";
 import { AccountDetailModal, RoleBadge, StatusBadge, UserAvatar } from "../dashboard/ProfileDashboard";
 import { api } from "../../lib/api";
+import { useAdminMode } from "../admin/AdminModeContext";
 
 export function ProfileDropdown({ user }: { user: UserProfileDto }) {
   const { logout, refreshUser } = useAuth();
+  const { adminMode, setAdminMode } = useAdminMode();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -243,6 +245,20 @@ export function ProfileDropdown({ user }: { user: UserProfileDto }) {
               </div>
               <span className="text-[10px] text-slate-500">ประมูล</span>
             </Link>
+
+            {user.role === "admin" && (
+              <Link
+                to="/admin/hosts"
+                onClick={() => {
+                  setAdminMode(true);
+                  setIsOpen(false);
+                }}
+                className="mt-1 flex w-full items-center justify-between rounded-xl border border-rose-400/20 bg-rose-400/[0.06] px-2.5 py-2 font-semibold text-rose-200 transition hover:bg-rose-400/[0.12]"
+              >
+                <span>{adminMode ? "จัดการโหมดแอดมิน" : "เปิดโหมดแอดมิน"}</span>
+                <span className="text-[10px] text-rose-300">Admin</span>
+              </Link>
+            )}
           </div>
 
           {/* Section 4: Logout */}

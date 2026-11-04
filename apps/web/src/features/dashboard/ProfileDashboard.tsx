@@ -133,6 +133,7 @@ export function ProfileDashboard() {
 
   // Modal states
   const [selectedUser, setSelectedUser] = useState<UserProfileDto | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
@@ -157,6 +158,10 @@ export function ProfileDashboard() {
   const showNotice = (msg: string) => {
     setActionNotice(msg);
     setTimeout(() => setActionNotice(null), 3000);
+  };
+
+  const toggleUserDetails = (userId: string) => {
+    setExpandedUserId((currentId) => (currentId === userId ? null : userId));
   };
 
   // Quick Seed Sample Data
@@ -498,14 +503,15 @@ export function ProfileDashboard() {
 
       {/* View Mode 1: Grid Cards View */}
       {!loading && viewMode === "grid" && filteredUsers.length > 0 && (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => {
             const isCurrent = currentUser?.id === user.id;
+            const isExpanded = expandedUserId === user.id;
 
             return (
               <div
                 key={user.id}
-                className={`card relative flex flex-col justify-between transition-all duration-150 hover:-translate-y-0.5 ${
+                className={`card relative flex h-fit flex-col justify-between transition-all duration-150 hover:-translate-y-0.5 ${
                   isCurrent ? "border-teal-500/30 bg-night-900/80" : ""
                 }`}
               >
@@ -518,7 +524,7 @@ export function ProfileDashboard() {
 
                 <div>
                   {/* Card Header: Avatar & Roles */}
-                  <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center justify-between gap-2.5">
                     <div className="flex items-center gap-3">
                       <UserAvatar name={user.fullName} role={user.role} size="md" />
                       <div>
@@ -528,52 +534,47 @@ export function ProfileDashboard() {
                         <p className="text-[11px] font-mono text-slate-400">@{user.username}</p>
                       </div>
                     </div>
-                    <StatusBadge status={user.status} />
+                    <button
+                      onClick={() => toggleUserDetails(user.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                      aria-expanded={isExpanded}
+                      aria-label={isExpanded ? "ซ่อนรายละเอียด" : "แสดงรายละเอียด"}
+                      title={isExpanded ? "ซ่อนรายละเอียด" : "แสดงรายละเอียด"}
+                    >
+                      <svg className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
                   </div>
 
-                  {/* Role & Demographics */}
-                  <div className="mt-3 flex items-center gap-2">
-                    <RoleBadge role={user.role} />
-                    <span className="text-[11px] text-slate-400">
-                      อายุ <strong className="text-slate-200">{user.age}</strong> ปี
-                    </span>
-                  </div>
-
-                  {/* Account Details Specs */}
-                  <div className="mt-3 space-y-1.5 border-t border-white/[0.04] pt-3 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-[11px]">อีเมล:</span>
-                      <span className="font-mono text-slate-200 text-[11px] truncate max-w-[180px]" title={user.email}>
-                        {user.email}
-                      </span>
+                  {isExpanded && (
+                    <div className="dashboard-details-slide mt-4 space-y-3 border-t border-white/[0.06] pt-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <RoleBadge role={user.role} />
+                        <StatusBadge status={user.status} />
+                        <span className="text-[11px] text-slate-400">อายุ <strong className="text-slate-200">{user.age}</strong> ปี</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[11px] text-slate-400">อีเมล</span>
+                          <span className="max-w-[180px] truncate font-mono text-[11px] text-slate-200" title={user.email}>{user.email}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-slate-400">เบอร์โทร</span>
+                          <span className="font-mono text-[11px] text-slate-200">{user.phone}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-slate-400">วันเกิด</span>
+                          <span className="text-[11px] text-slate-300">{formatBirthDate(user.birthDate)}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 rounded-xl bg-night-950/60 p-2 text-center text-xs">
+                        <div><p className="text-[9px] text-slate-500">จองโต๊ะ</p><p className="font-display text-xs font-medium text-slate-200">{user.activity.bookings}</p></div>
+                        <div className="border-x border-white/[0.04]"><p className="text-[9px] text-slate-500">ประมูล</p><p className="font-display text-xs font-medium text-teal-300">{user.activity.bids}</p></div>
+                        <div><p className="text-[9px] text-slate-500">E-Tickets</p><p className="font-display text-xs font-medium text-amber-300">{user.activity.tickets}</p></div>
+                      </div>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-[11px]">เบอร์โทร:</span>
-                      <span className="font-mono text-slate-200 text-[11px]">{user.phone}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-[11px]">วันเกิด:</span>
-                      <span className="text-slate-300 text-[11px]">{formatBirthDate(user.birthDate)}</span>
-                    </div>
-                  </div>
-
-                  {/* Activity Stats Mini Grid */}
-                  <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-night-950/60 p-2 text-center text-xs">
-                    <div>
-                      <p className="text-slate-500 text-[9px]">จองโต๊ะ</p>
-                      <p className="font-display font-medium text-slate-200 text-xs">{user.activity.bookings}</p>
-                    </div>
-                    <div className="border-x border-white/[0.04]">
-                      <p className="text-slate-500 text-[9px]">ประมูล</p>
-                      <p className="font-display font-medium text-teal-300 text-xs">{user.activity.bids}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-[9px]">E-Tickets</p>
-                      <p className="font-display font-medium text-amber-300 text-xs">{user.activity.tickets}</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Card Actions */}
@@ -610,25 +611,18 @@ export function ProfileDashboard() {
               <thead className="border-b border-white/[0.06] bg-night-950/60 text-slate-400">
                 <tr>
                   <th className="px-5 py-3.5 font-medium">ผู้ใช้งาน</th>
-                  <th className="px-4 py-3.5 font-medium">อีเมล / เบอร์โทร</th>
-                  <th className="px-4 py-3.5 font-medium">บทบาท</th>
-                  <th className="px-4 py-3.5 font-medium">สถานะ</th>
-                  <th className="px-4 py-3.5 font-medium">อายุ</th>
-                  <th className="px-4 py-3.5 font-medium">กิจกรรม</th>
+                  <th className="px-4 py-3.5 font-medium">รายละเอียด</th>
                   <th className="px-5 py-3.5 text-right font-medium">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 {filteredUsers.map((user) => {
                   const isCurrent = currentUser?.id === user.id;
+                  const isExpanded = expandedUserId === user.id;
 
                   return (
-                    <tr
-                      key={user.id}
-                      className={`transition-colors hover:bg-white/[0.02] ${
-                        isCurrent ? "bg-teal-500/[0.03]" : ""
-                      }`}
-                    >
+                    <React.Fragment key={user.id}>
+                    <tr className={`transition-colors hover:bg-white/[0.02] ${isCurrent ? "bg-teal-500/[0.03]" : ""}`}>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2.5">
                           <UserAvatar name={user.fullName} role={user.role} size="sm" />
@@ -639,24 +633,12 @@ export function ProfileDashboard() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="font-mono text-slate-200">{user.email}</div>
-                        <div className="font-mono text-slate-400 text-[11px]">{user.phone}</div>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <RoleBadge role={user.role} />
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <StatusBadge status={user.status} />
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="text-slate-200">{user.age} ปี</div>
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-400">
-                        <div className="flex items-center gap-2.5 text-[11px]">
-                          <span>จอง {user.activity.bookings}</span>
-                          <span>ประมูล {user.activity.bids}</span>
-                          <span>ตั๋ว {user.activity.tickets}</span>
-                        </div>
+                        <button onClick={() => toggleUserDetails(user.id)} className="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white" aria-expanded={isExpanded}>
+                          {isExpanded ? "ซ่อนรายละเอียด" : "ดูรายละเอียด"}
+                          <svg className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
+                          </svg>
+                        </button>
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -680,6 +662,21 @@ export function ProfileDashboard() {
                         </div>
                       </td>
                     </tr>
+                    {isExpanded && (
+                      <tr className="dashboard-details-slide bg-night-950/30">
+                        <td colSpan={3} className="px-5 py-3">
+                          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-300">
+                            <RoleBadge role={user.role} />
+                            <StatusBadge status={user.status} />
+                            <span>อายุ {user.age} ปี</span>
+                            <span>{user.email}</span>
+                            <span>{user.phone}</span>
+                            <span>จอง {user.activity.bookings} · ประมูล {user.activity.bids} · ตั๋ว {user.activity.tickets}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>

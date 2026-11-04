@@ -1,5 +1,6 @@
 import axios from "axios";
 export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:4000/api", withCredentials: true });
+export const assetUrl = (path: string | null) => path ? `${(import.meta.env.VITE_API_URL ?? "http://localhost:4000/api").replace(/\/api\/?$/, "")}${path}` : null;
 api.interceptors.request.use((config) => { const token = localStorage.getItem("accessToken"); if (token) config.headers.Authorization = `Bearer ${token}`; return config; });
 let refreshing: Promise<string> | null = null;
 api.interceptors.response.use(undefined, async (error) => {

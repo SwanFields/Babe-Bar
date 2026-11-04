@@ -209,6 +209,12 @@ model Package {
 model Host {
   id            Int            @id @default(autoincrement())
   stageName     String         @unique
+  firstName     String?
+  lastName      String?
+  nickname      String?
+  age           Int?
+  heightCm      Int?
+  caption       String?
   bio           String?
   photoUrl      String?
   isActive      Boolean        @default(true)

@@ -32,11 +32,11 @@ async function main() {
     await prisma.venueTable.upsert({ where: { tableNo: table.tableNo }, update: table, create: table });
   }
   for (const host of [
-    { stageName: "Luna", bio: "The neon star" },
-    { stageName: "Mimi", bio: "Good vibes only" },
-    { stageName: "Nana", bio: "Neon mood maker" },
-    { stageName: "Pim", bio: "Good times specialist" },
-    { stageName: "Sora", bio: "Midnight energy" }
+    { stageName: "Luna", firstName: "ลูน่า", lastName: "สุวรรณ", nickname: "ลูน่า", age: 24, heightCm: 168, caption: "The neon star", bio: "The neon star" },
+    { stageName: "Mimi", firstName: "มิมิ", lastName: "วัฒนะ", nickname: "มิมิ", age: 23, heightCm: 165, caption: "Good vibes only", bio: "Good vibes only" },
+    { stageName: "Nana", firstName: "นานา", lastName: "ศรีสุข", nickname: "นานา", age: 25, heightCm: 170, caption: "Neon mood maker", bio: "Neon mood maker" },
+    { stageName: "Pim", firstName: "พิม", lastName: "ใจดี", nickname: "พิม", age: 22, heightCm: 162, caption: "Good times specialist", bio: "Good times specialist" },
+    { stageName: "Sora", firstName: "โซระ", lastName: "แสงดาว", nickname: "โซระ", age: 26, heightCm: 172, caption: "Midnight energy", bio: "Midnight energy" }
   ]) {
     await prisma.host.upsert({ where: { stageName: host.stageName }, update: host, create: host });
   }

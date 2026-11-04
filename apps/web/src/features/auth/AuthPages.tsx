@@ -124,7 +124,7 @@ export function RegisterPage() {
     phone: "",
     username: "",
     birthDate: "",
-    acceptedTerms: false,
+    acceptedTerms: true,
     ageConfirmed: false
   });
   const [error, setError] = useState("");
@@ -160,16 +160,6 @@ export function RegisterPage() {
         <Field label="Username (a-z, 0-9, _)" name="username" value={values.username} onChange={(username) => setValues({ ...values, username })} />
         <Field label="วันเกิด" name="birthDate" type="date" value={values.birthDate} onChange={(birthDate) => setValues({ ...values, birthDate })} />
         <Field label="รหัสผ่าน (อย่างน้อย 8 ตัวอักษร)" name="password" type="password" value={values.password} onChange={(password) => setValues({ ...values, password })} />
-
-        <label className="flex items-center gap-2.5 text-xs text-slate-400 pt-1">
-          <input
-            type="checkbox"
-            checked={values.acceptedTerms}
-            onChange={(event) => setValues({ ...values, acceptedTerms: event.target.checked })}
-            className="rounded border-white/20 bg-night-950 text-rose-500 focus:ring-0"
-          />
-          <span>ยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว</span>
-        </label>
 
         <label className="flex items-center gap-2.5 text-xs text-slate-400">
           <input
