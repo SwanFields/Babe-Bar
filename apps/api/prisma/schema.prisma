@@ -1,0 +1,404 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  customer
+  staff
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  deleted
+}
+
+enum BookingStatus {
+  pending_payment
+  confirmed
+  checked_in
+  no_show
+  cancelled
+  expired
+}
+
+enum OrderStatus {
+  pending_payment
+  paid
+  cancelled
+  refunded
+}
+
+enum AuctionStatus {
+  scheduled
+  open
+  closed
+  settled
+}
+
+enum AuctionItemStatus {
+  open
+  closed
+  paid
+  payment_failed
+  no_bids
+}
+
+enum PaymentStatus {
+  pending
+  requires_action
+  succeeded
+  failed
+  canceled
+  refunded
+}
+
+enum TicketStatus {
+  active
+  used
+  expired
+  void
+}
+
+model User {
+  id                 String             @id @default(uuid()) @db.Uuid
+  email              String             @unique
+  passwordHash       String
+  fullName           String
+  phone              String             @unique
+  username           String             @unique
+  birthDate          DateTime           @db.Date
+  role               UserRole           @default(customer)
+  status             UserStatus         @default(active)
+  emailVerifiedAt    DateTime?
+  stripeCustomerId   String?            @unique
+  auctionBannedUntil DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+  authTokens         AuthToken[]
+  refreshSessions    RefreshSession[]
+  consents           ConsentLog[]
+  paymentMethods     PaymentMethod[]
+  bookings           Booking[]
+  packageOrders      PackageOrder[]
+  leadingAuctions    AuctionItem[]      @relation("leading")
+  winningAuctions    AuctionItem[]      @relation("winner")
+  bids               Bid[]
+  payments           Payment[]
+  tickets            ETicket[]
+  redemptions        TicketRedemption[] @relation("staff")
+  eventClaims        EventClaim[]
+  auditLogs          AuditLog[]
+  reviews            Review[]
+}
+
+model AuthToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ConsentLog {
+  id              BigInt   @id @default(autoincrement())
+  userId          String   @db.Uuid
+  consentType     String
+  documentVersion String
+  ip              String?
+  acceptedAt      DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model PaymentMethod {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  stripePaymentMethodId String    @unique
+  brand                 String
+  last4                 String
+  expMonth              Int
+  expYear               Int
+  isDefault             Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  detachedAt            DateTime?
+  user                  User      @relation(fields: [userId], references: [id])
+  bids                  Bid[]
+  payments              Payment[]
+}
+
+model Zone {
+  id       Int          @id @default(autoincrement())
+  code     String       @unique
+  nameTh   String
+  isActive Boolean      @default(true)
+  tables   VenueTable[]
+}
+
+model VenueTable {
+  id          Int       @id @default(autoincrement())
+  zoneId      Int
+  tableNo     String    @unique
+  capacityMin Int       @default(1)
+  capacityMax Int
+  isVip       Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  zone        Zone      @relation(fields: [zoneId], references: [id])
+  bookings    Booking[]
+}
+
+model Booking {
+  id               String        @id @default(uuid()) @db.Uuid
+  bookingCode      String        @unique
+  userId           String        @db.Uuid
+  tableId          Int
+  businessDate     DateTime      @db.Date
+  partySizeRange   String
+  guestName        String
+  arrivalAt        DateTime
+  graceUntil       DateTime
+  depositSatang    Int           @default(35000)
+  status           BookingStatus @default(pending_payment)
+  depositForfeited Boolean       @default(false)
+  specialRequest   String?
+  holdExpiresAt    DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id])
+  table            VenueTable    @relation(fields: [tableId], references: [id])
+  payments         Payment[]
+  ticket           ETicket?
+  eventClaims      EventClaim[]
+}
+
+model Package {
+  id               Int            @id @default(autoincrement())
+  code             String         @unique
+  name             String
+  description      String?
+  priceSatang      Int
+  includes         Json
+  requiresHostPick Boolean        @default(false)
+  validDays        Int            @default(7)
+  isActive         Boolean        @default(true)
+  sortOrder        Int            @default(0)
+  orders           PackageOrder[]
+  Ticket           Ticket[]
+}
+
+model Host {
+  id            Int            @id @default(autoincrement())
+  stageName     String         @unique
+  firstName     String?
+  lastName      String?
+  nickname      String?
+  age           Int?
+  heightCm      Int?
+  caption       String?
+  bio           String?
+  photoUrl      String?
+  isActive      Boolean        @default(true)
+  packageOrders PackageOrder[]
+  auctionItems  AuctionItem[]
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    String   @db.Uuid
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model PackageOrder {
+  id           String      @id @default(uuid()) @db.Uuid
+  orderCode    String      @unique
+  userId       String      @db.Uuid
+  packageId    Int
+  priceSatang  Int
+  chosenHostId Int?
+  useDate      DateTime?   @db.Date
+  status       OrderStatus @default(pending_payment)
+  createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id])
+  package      Package     @relation(fields: [packageId], references: [id])
+  chosenHost   Host?       @relation(fields: [chosenHostId], references: [id])
+  payments     Payment[]
+  ticket       ETicket?
+}
+
+model AuctionSession {
+  id           Int           @id @default(autoincrement())
+  businessDate DateTime      @unique @db.Date
+  opensAt      DateTime
+  closesAt     DateTime
+  status       AuctionStatus @default(scheduled)
+  items        AuctionItem[]
+}
+
+model AuctionItem {
+  id                 Int               @id @default(autoincrement())
+  sessionId          Int
+  hostId             Int
+  startPriceSatang   Int               @default(0)
+  minIncrementSatang Int               @default(25000)
+  currentPriceSatang Int               @default(0)
+  sortOrder          Int               @default(0)
+  leadingUserId      String?           @db.Uuid
+  winnerUserId       String?           @db.Uuid
+  status             AuctionItemStatus @default(open)
+  session            AuctionSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  host               Host              @relation(fields: [hostId], references: [id])
+  leadingUser        User?             @relation("leading", fields: [leadingUserId], references: [id])
+  winnerUser         User?             @relation("winner", fields: [winnerUserId], references: [id])
+  bids               Bid[]
+  payments           Payment[]
+}
+
+model Bid {
+  id              BigInt        @id @default(autoincrement())
+  auctionItemId   Int
+  userId          String        @db.Uuid
+  paymentMethodId String        @db.Uuid
+  amountSatang    Int
+  status          String        @default("active")
+  termsVersion    String
+  termsAcceptedAt DateTime
+  createdAt       DateTime      @default(now())
+  auctionItem     AuctionItem   @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+model Payment {
+  id                    String         @id @default(uuid()) @db.Uuid
+  userId                String         @db.Uuid
+  purpose               String
+  bookingId             String?        @db.Uuid
+  packageOrderId        String?        @db.Uuid
+  auctionItemId         Int?
+  paymentMethodId       String?        @db.Uuid
+  method                String
+  amountSatang          Int
+  currency              String         @default("thb")
+  status                PaymentStatus  @default(pending)
+  stripePaymentIntentId String?        @unique
+  idempotencyKey        String         @unique
+  paidAt                DateTime?
+  user                  User           @relation(fields: [userId], references: [id])
+  booking               Booking?       @relation(fields: [bookingId], references: [id])
+  packageOrder          PackageOrder?  @relation(fields: [packageOrderId], references: [id])
+  auctionItem           AuctionItem?   @relation(fields: [auctionItemId], references: [id])
+  paymentMethod         PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+}
+
+model ETicket {
+  id             String            @id @default(uuid()) @db.Uuid
+  ticketCode     String            @unique
+  qrToken        String            @unique
+  userId         String            @db.Uuid
+  ticketType     String
+  bookingId      String?           @unique @db.Uuid
+  packageOrderId String?           @unique @db.Uuid
+  status         TicketStatus      @default(active)
+  validFrom      DateTime
+  validUntil     DateTime
+  createdAt      DateTime          @default(now())
+  user           User              @relation(fields: [userId], references: [id])
+  booking        Booking?          @relation(fields: [bookingId], references: [id])
+  packageOrder   PackageOrder?     @relation(fields: [packageOrderId], references: [id])
+  redemption     TicketRedemption?
+}
+
+model TicketRedemption {
+  id         String   @id @default(uuid()) @db.Uuid
+  ticketId   String   @unique @db.Uuid
+  staffId    String   @db.Uuid
+  redeemedAt DateTime @default(now())
+  ticket     ETicket  @relation(fields: [ticketId], references: [id])
+  staff      User     @relation("staff", fields: [staffId], references: [id])
+}
+
+model Event {
+  id          Int          @id @default(autoincrement())
+  slug        String       @unique
+  name        String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean      @default(true)
+  claims      EventClaim[]
+}
+
+model EventClaim {
+  id           String   @id @default(uuid()) @db.Uuid
+  eventId      Int
+  userId       String   @db.Uuid
+  businessDate DateTime @db.Date
+  bookingId    String?  @db.Uuid
+  verifiedBy   String?  @db.Uuid
+  event        Event    @relation(fields: [eventId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+  booking      Booking? @relation(fields: [bookingId], references: [id])
+}
+
+model WebhookEvent {
+  id          String    @id
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+}
+
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  actorUserId String?  @db.Uuid
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Ticket {
+  id        Int    @id @default(autoincrement())
+  code      String @unique
+  packageId Int
+  userId    Int
+
+  isUsed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  package Package @relation(fields: [packageId], references: [id])
+}
