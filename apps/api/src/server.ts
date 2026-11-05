@@ -550,6 +550,77 @@ app.get("/api/auction/admin/hosts", requireAuth, requireRole("admin"), async (_r
   } catch (error) {
     next(error);
   }
+  app.get("/api/auction/admin/hosts", requireAuth, requireRole("admin"), async (_req, res, next) => {
+    try {
+      res.json(await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" } }));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/auction/customer-drips", requireAuth, async (req: AuthRequest, res, next) => {
+    try {
+      const activeItems = await prisma.auctionItem.findMany({
+        where: { status: "open" },
+        select: { id: true, hostId: true, currentPriceSatang: true }
+      });
+
+      if (activeItems.length === 0) {
+        res.json([]);
+        return;
+      }
+
+      const bids = await prisma.bid.findMany({
+        select: { userId: true, amountSatang: true, auctionItemId: true },
+        where: { auctionItemId: { in: activeItems.map((item) => item.id) } }
+      });
+
+      const hostCustomerMap = new Map<number, Map<string, number>>();
+
+      for (const item of activeItems) {
+        if (!hostCustomerMap.has(item.hostId)) {
+          hostCustomerMap.set(item.hostId, new Map());
+        }
+      }
+
+      for (const bid of bids) {
+        const item = activeItems.find((i) => i.id === bid.auctionItemId);
+        if (!item) continue;
+
+        const hostId = item.hostId;
+        const drinks = Math.floor(bid.amountSatang / 25000);
+
+        const customerDrips = hostCustomerMap.get(hostId)!;
+        const existing = customerDrips.get(bid.userId) ?? 0;
+        customerDrips.set(bid.userId, existing + drinks);
+      }
+
+      const hostRankings: Array<{ hostId: number; rankings: { userId: string; drinks: number; amountSatang: number }[]; totalDrinks: number }> = [];
+      for (const [hostId, customerDrips] of hostCustomerMap.entries()) {
+        const rankings = Array.from(customerDrips.entries())
+          .map(([userId, drinks]) => {
+            const amountSatang = drinks * 25000;
+            return { userId, drinks, amountSatang };
+          })
+          .sort((a, b) => b.drinks - a.drinks || a.amountSatang - b.amountSatang)
+          .slice(0, 3);
+
+        if (rankings.length > 0) {
+          hostRankings.push({
+            hostId,
+            rankings,
+            totalDrinks: rankings.reduce((sum, r) => sum + r.drinks, 0)
+          });
+        }
+      }
+
+      res.json(hostRankings);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+
 });
 
 app.post("/api/auction/admin/schedule", requireAuth, requireRole("admin"), validate(auctionScheduleSchema), async (req: AuthRequest, res, next) => {

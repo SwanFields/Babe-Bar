@@ -8,6 +8,8 @@ import { useAdminMode } from "../admin/AdminModeContext";
 
 type Method = { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean };
 type AdminHost = { id: number; stageName: string; photoUrl: string | null };
+type HostCustomerRank = { userId: string; drinks: number; amountSatang: number };
+type HostDripRankings = { hostId: number; rankings: HostCustomerRank[]; totalDrinks: number };
 type Item = { id: number; startPriceSatang: number; minIncrementSatang: number; currentPriceSatang: number; currentDrinks: number; status: string; leadingUserId: string | null; host: { stageName: string; bio: string | null; photoUrl: string | null } };
 type Auction = { opensAt: string; closesAt: string; status: string; items: Item[] };
 const errorText = (reason: unknown) => (reason as { response?: { data?: { error?: string } } }).response?.data?.error ?? "เกิดข้อผิดพลาด กรุณาลองใหม่";
@@ -58,6 +60,7 @@ function AuctionContent() {
   const [adminHosts, setAdminHosts] = useState<AdminHost[]>([]);
   const [selectedHostIds, setSelectedHostIds] = useState<number[]>([]);
   const [draggedHostId, setDraggedHostId] = useState<number | null>(null);
+  const [dripRankings, setDripRankings] = useState<Map<number, HostCustomerRank[]>>(new Map());
 
   async function load() {
     try {
@@ -81,9 +84,71 @@ function AuctionContent() {
     const timer = window.setInterval(() => { void api.get("/auction/today").then((response) => setAuction(response.data)).catch(() => undefined); }, 2000);
     return () => window.clearInterval(timer);
   }, [user]);
+  useEffect(() => {
+    void api.get("/auction/customer-drips").then((response) => {
+      const rankings = new Map<number, HostCustomerRank[]>();
+      for (const group of response.data as HostDripRankings[]) {
+        rankings.set(group.hostId, group.rankings);
+      }
+      setDripRankings(rankings);
+    }).catch(() => undefined);
+  }, []);
 
-  if (loading) return <section className="mx-auto max-w-3xl px-5 py-24 text-center text-slate-400">กำลังตรวจสอบบัญชี...</section>;
+    if (loading) return <section className="mx-auto max-w-3xl px-5 py-24 text-center text-slate-400">กำลังตรวจสอบบัญชี...</section>;
   if (!user) return <Navigate to="/login" state={{ from: "/auction" }} replace />;
+
+  const customerDrips = user ? (
+    dripRankings.size > 0 ? Array.from(dripRankings.values()).flat().reduce((acc, curr) => {
+      if (curr.userId === user.id) {
+        acc.drinks += curr.drinks;
+        acc.amountSatang += curr.amountSatang;
+      }
+      return acc;
+    }, { drinks: 0, amountSatang: 0 }) : { drinks: 0, amountSatang: 0 }
+  ) : { drinks: 0, amountSatang: 0 };
+
+  const getHostRankings = (hostId: number): HostCustomerRank[] => dripRankings.get(hostId) ?? [];
+
+  function renderHostDropdown(hostId: number, hostName: string) {
+    const rankings = getHostRankings(hostId);
+    return (
+      <div className="relative">
+        <button
+          onClick={(e) => { e.stopPropagation(); }}
+          className="flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/5 rounded-lg transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {hostName}
+          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div className="absolute right-0 top-full mt-2 w-64 origin-top-right rounded-xl border border-white/10 bg-night-900/95 p-3 shadow-2xl backdrop-blur-xl z-50 hidden">
+          <div className="mb-3 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">อันดับลูกค้า ดริ้ง (รอบนี้)</p>
+              <span className="text-[10px] text-slate-500">{rankings.length} คน</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {rankings.map((ranking, index) => (
+              <div key={ranking.userId} className={`flex items-center justify-between px-3 py-2 rounded-lg ${index === 0 ? "bg-gold/10" : ""}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? "bg-gold text-black" : "bg-slate-700 text-white"}`}>
+                    {index + 1}
+                  </span>
+                  <span className="text-sm text-slate-300">{ranking.drinks} ดริ้ง</span>
+                </div>
+                <span className="text-xs text-slate-400">{ranking.amountSatang} บาท</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   async function placeBid(item: Item) {
     const method = methods.find((entry) => entry.isDefault) ?? methods[0];
@@ -147,6 +212,31 @@ function AuctionContent() {
       </div>
     </div>
     <div className="card mb-6 border-amber-400/20 bg-amber-400/[0.05] text-sm text-amber-100">คำเตือน: เมื่อกดประมูลแล้วไม่สามารถยกเลิกได้ ผู้ชนะจะถูกเรียกเก็บเงินอัตโนมัติเมื่อหมดเวลา</div>
+    {(user && customerDrips.drinks > 0) && (
+      <div className="card mb-6 border-blue-400/20 bg-blue-400/[0.05] text-sm text-blue-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center">
+              <span className="text-sm font-bold text-blue-300">{customerDrips.drinks}</span>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-blue-300">ดริ้งที่คุณจ่ายไป</p>
+              <p className="text-lg font-bold text-white">{customerDrips.drinks} ดริ้ง</p>
+              <p className="text-xs text-blue-200/70">{customerDrips.amountSatang} บาท ทั้งหมด</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    {user.role === "admin" && adminMode && (
+      <div className="mb-4 flex flex-wrap gap-2">
+        {adminHosts.map((host) => (
+          <div key={host.id} className="relative">
+            {renderHostDropdown(host.id, host.stageName)}
+          </div>
+        ))}
+      </div>
+    )}
     {user.role === "admin" && adminMode && <div className="card mb-6 border-rose-400/20"><h2 className="font-display text-xl font-bold">จัดวางโฮสต์และควบคุมประมูล</h2><p className="mt-2 text-sm text-slate-400">เลือกโฮสต์และใช้ปุ่มลูกศรเพื่อกำหนดลำดับที่จะแสดงในการประมูล</p><div className="mt-4 space-y-2">    {selectedHostIds.map((id, index) => { const host = adminHosts.find((entry) => entry.id === id); if (!host) return null; return <div className={`flex cursor-grab items-center gap-3 rounded-xl border bg-night-950/50 p-2 transition ${draggedHostId === id ? "border-teal-300/60 opacity-50" : "border-white/10"}`} draggable onDragStart={() => setDraggedHostId(id)} onDragEnd={() => setDraggedHostId(null)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveHost(id)} key={id}><span className="text-slate-500" aria-hidden="true">⋮⋮</span><span className="w-6 text-center text-xs text-slate-500">{index + 1}</span><span className="flex-1 text-sm text-white">{host.stageName}</span><button type="button" className="rounded-lg border border-rose-400/30 px-2 py-1 text-xs text-rose-300" onClick={() => setSelectedHostIds((ids) => ids.filter((entry) => entry !== id))}>เอาออก</button></div>; })}</div><div className="mt-3 flex flex-wrap gap-2">{adminHosts.filter((host) => !selectedHostIds.includes(host.id)).map((host) => <button type="button" className="rounded-lg border border-teal-400/30 px-3 py-1.5 text-xs text-teal-300" key={host.id} onClick={() => setSelectedHostIds((ids) => [...ids, host.id])}>+ {host.stageName}</button>)}</div><form className="mt-5 grid gap-3 sm:grid-cols-3" onSubmit={(event) => void scheduleAuction(event)}><label className="text-sm text-slate-400">วันที่<input className="field mt-1" type="date" value={schedule.date} onChange={(event) => setSchedule({ ...schedule, date: event.target.value })} /></label><label className="text-sm text-slate-400">เวลาเปิด<input className="field mt-1" type="time" value={schedule.opensAt} onChange={(event) => setSchedule({ ...schedule, opensAt: event.target.value })} /></label><label className="text-sm text-slate-400">เวลาปิด<input className="field mt-1" type="time" value={schedule.closesAt} onChange={(event) => setSchedule({ ...schedule, closesAt: event.target.value })} /></label>    <button className="btn-primary sm:col-span-3" type="submit" disabled={!selectedHostIds.length}>บันทึกลำดับและแสดงรายการวันนี้</button></form><div className="mt-3 flex flex-wrap gap-3"><button className="rounded-xl border border-teal-400/40 px-4 py-2 text-sm text-teal-200 hover:bg-teal-400/10" type="button" onClick={() => void adminAction("open-now")}>เปิดประมูลทันที</button><button className="rounded-xl border border-rose-400/40 px-4 py-2 text-sm text-rose-200 hover:bg-rose-400/10" type="button" onClick={() => void adminAction("close-now")}>ปิดประมูลทันที</button></div><p className="mt-3 text-xs text-slate-500">เครื่องมือนี้แสดงเฉพาะ Admin ที่เปิดโหมด Admin และเวลาที่ระบบใช้คือ Asia/Bangkok</p></div>}
     <div className="auction-payment-panel card mb-6"><h2 className="font-display text-xl font-bold">บัตรสำหรับประมูล</h2><p className="mt-2 text-sm text-slate-400">{methods.length ? `บัตรที่ผูกไว้: ${methods[0].brand} •••• ${methods[0].last4}` : "ต้องผูกบัตร Stripe Test Mode ก่อนจึงจะประมูลได้"}</p><p className="mt-2 text-[11px] text-slate-500">ต้องผูกบัตรก่อนเท่านั้น จึงจะสามารถทำการประมูลได้</p>{stripePromise ? <CardBindingForm onSaved={(method) => setMethods([method, ...methods])} onError={setError} onMessage={setMessage} /> : <p className="mt-4 text-sm text-amber-300">ยังไม่ได้ตั้งค่า VITE_STRIPE_PUBLISHABLE_KEY ใน apps/web/.env</p>}</div>
     {message && <p className="mb-4 rounded-xl border border-teal-400/30 bg-teal-400/10 p-3 text-sm text-teal-200">{message}</p>}{error && <p className="mb-4 rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{error}</p>}
