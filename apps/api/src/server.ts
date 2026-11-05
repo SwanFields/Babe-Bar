@@ -550,77 +550,76 @@ app.get("/api/auction/admin/hosts", requireAuth, requireRole("admin"), async (_r
   } catch (error) {
     next(error);
   }
-  app.get("/api/auction/admin/hosts", requireAuth, requireRole("admin"), async (_req, res, next) => {
-    try {
-      res.json(await prisma.host.findMany({ where: { isActive: true }, orderBy: { id: "asc" } }));
-    } catch (error) {
-      next(error);
+});
+
+// สรุปดริ้งที่ลูกค้าบิดในรอบประมูลวันนี้
+// - mine: ยอดรวมของผู้ใช้ที่ล็อกอิน + แยกรายโฮสต์
+// - hosts: อันดับ 1-3 ของลูกค้าที่บิดแต่ละโฮสต์ (แสดง username)
+// หมายเหตุ: Bid.amountSatang เก็บ "ยอดสะสมใหม่ของโฮสต์" ณ ตอนบิด ไม่ใช่ยอดที่ลูกค้าเพิ่ม
+// จึงต้องหาส่วนต่างจากบิดก่อนหน้าของไอเท็มเดียวกันเพื่อให้ได้ยอดที่ลูกค้าคนนั้นเพิ่มจริง
+app.get("/api/auction/customer-drips", requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const DRINK_SATANG = 25000;
+    const session = await prisma.auctionSession.findUnique({
+      where: { businessDate: new Date(`${businessDate()}T00:00:00Z`) },
+      select: { status: true, opensAt: true, closesAt: true, items: { select: { id: true, hostId: true, host: { select: { stageName: true } } } } }
+    });
+    const empty = { mine: { totalDrinks: 0, totalSatang: 0, hosts: [] }, hosts: [] };
+    // แสดงเฉพาะรอบที่กำลังเปิดประมูลอยู่ — เมื่อปิดประมูล/ยังไม่เปิด ยอดทั้งหมดเป็น 0
+    const now = new Date();
+    const roundIsLive = !!session && (session.status === "open" || session.status === "scheduled") && now >= session.opensAt && now < session.closesAt;
+    if (!session || !roundIsLive || session.items.length === 0) { res.json(empty); return; }
+
+    const itemById = new Map(session.items.map((item) => [item.id, item]));
+    const bids = await prisma.bid.findMany({
+      // นับเฉพาะบิดของรอบปัจจุบัน (ไม่เอาบิดที่ถูก archive เมื่อรีเซ็ตรอบ และไม่เอาบิดก่อนเวลาเปิดรอบ)
+      where: { auctionItemId: { in: session.items.map((item) => item.id) }, status: "active", createdAt: { gte: session.opensAt } },
+      orderBy: { id: "asc" },
+      select: { auctionItemId: true, userId: true, amountSatang: true, user: { select: { username: true } } }
+    });
+
+    const previousTotal = new Map<number, number>();
+    const perHost = new Map<number, Map<string, { username: string; satang: number }>>();
+    for (const bid of bids) {
+      const item = itemById.get(bid.auctionItemId);
+      if (!item) continue;
+      const added = Math.max(0, bid.amountSatang - (previousTotal.get(bid.auctionItemId) ?? 0));
+      previousTotal.set(bid.auctionItemId, bid.amountSatang);
+      const customers = perHost.get(item.hostId) ?? new Map<string, { username: string; satang: number }>();
+      const entry = customers.get(bid.userId) ?? { username: bid.user.username, satang: 0 };
+      entry.satang += added;
+      customers.set(bid.userId, entry);
+      perHost.set(item.hostId, customers);
     }
-  });
 
-  app.get("/api/auction/customer-drips", requireAuth, async (req: AuthRequest, res, next) => {
-    try {
-      const activeItems = await prisma.auctionItem.findMany({
-        where: { status: "open" },
-        select: { id: true, hostId: true, currentPriceSatang: true }
-      });
+    const hostNames = new Map(session.items.map((item) => [item.hostId, item.host.stageName]));
+    const hosts = Array.from(perHost.entries()).map(([hostId, customers]) => ({
+      hostId,
+      rankings: Array.from(customers.entries())
+        .map(([userId, value]) => ({ userId, username: value.username, drinks: Math.floor(value.satang / DRINK_SATANG), amountSatang: value.satang }))
+        .filter((row) => row.amountSatang > 0)
+        .sort((a, b) => b.amountSatang - a.amountSatang || a.username.localeCompare(b.username))
+        .slice(0, 3)
+        .map((row, index) => ({ rank: index + 1, ...row, isMe: row.userId === req.user!.id }))
+    }));
 
-      if (activeItems.length === 0) {
-        res.json([]);
-        return;
-      }
+    const myHosts = Array.from(perHost.entries())
+      .map(([hostId, customers]) => ({ hostId, stageName: hostNames.get(hostId) ?? "", satang: customers.get(req.user!.id)?.satang ?? 0 }))
+      .filter((row) => row.satang > 0)
+      .sort((a, b) => b.satang - a.satang)
+      .map((row) => ({ hostId: row.hostId, stageName: row.stageName, drinks: Math.floor(row.satang / DRINK_SATANG), amountSatang: row.satang }));
 
-      const bids = await prisma.bid.findMany({
-        select: { userId: true, amountSatang: true, auctionItemId: true },
-        where: { auctionItemId: { in: activeItems.map((item) => item.id) } }
-      });
-
-      const hostCustomerMap = new Map<number, Map<string, number>>();
-
-      for (const item of activeItems) {
-        if (!hostCustomerMap.has(item.hostId)) {
-          hostCustomerMap.set(item.hostId, new Map());
-        }
-      }
-
-      for (const bid of bids) {
-        const item = activeItems.find((i) => i.id === bid.auctionItemId);
-        if (!item) continue;
-
-        const hostId = item.hostId;
-        const drinks = Math.floor(bid.amountSatang / 25000);
-
-        const customerDrips = hostCustomerMap.get(hostId)!;
-        const existing = customerDrips.get(bid.userId) ?? 0;
-        customerDrips.set(bid.userId, existing + drinks);
-      }
-
-      const hostRankings: Array<{ hostId: number; rankings: { userId: string; drinks: number; amountSatang: number }[]; totalDrinks: number }> = [];
-      for (const [hostId, customerDrips] of hostCustomerMap.entries()) {
-        const rankings = Array.from(customerDrips.entries())
-          .map(([userId, drinks]) => {
-            const amountSatang = drinks * 25000;
-            return { userId, drinks, amountSatang };
-          })
-          .sort((a, b) => b.drinks - a.drinks || a.amountSatang - b.amountSatang)
-          .slice(0, 3);
-
-        if (rankings.length > 0) {
-          hostRankings.push({
-            hostId,
-            rankings,
-            totalDrinks: rankings.reduce((sum, r) => sum + r.drinks, 0)
-          });
-        }
-      }
-
-      res.json(hostRankings);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-
+    res.json({
+      mine: {
+        totalDrinks: myHosts.reduce((sum, row) => sum + row.drinks, 0),
+        totalSatang: myHosts.reduce((sum, row) => sum + row.amountSatang, 0),
+        hosts: myHosts
+      },
+      hosts: hosts.filter((host) => host.rankings.length > 0)
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/api/auction/admin/schedule", requireAuth, requireRole("admin"), validate(auctionScheduleSchema), async (req: AuthRequest, res, next) => {
@@ -644,6 +643,7 @@ app.post("/api/auction/admin/schedule", requireAuth, requireRole("admin"), valid
       include: { items: { include: { host: true } } }
     });
     await prisma.$transaction(async (tx) => {
+      await tx.bid.updateMany({ where: { auctionItem: { sessionId: session.id }, status: "active" }, data: { status: "archived" } });
       await tx.auctionItem.updateMany({
         where: { sessionId: session.id, hostId: { notIn: hostIds } },
         data: { status: "closed" }
@@ -673,6 +673,7 @@ app.post("/api/auction/admin/open-now", requireAuth, requireRole("admin"), async
     const session = await prisma.$transaction(async (tx) => {
       const current = await tx.auctionSession.findUnique({ where: { businessDate: new Date(`${date}T00:00:00Z`) } });
       if (!current) throw Object.assign(new Error("ยังไม่มีรายการประมูลวันนี้ กรุณาบันทึกเวลาเปิด-ปิดก่อน"), { status: 404 });
+      await tx.bid.updateMany({ where: { auctionItem: { sessionId: current.id }, status: "active" }, data: { status: "archived" } });
       await tx.auctionItem.updateMany({
         where: { sessionId: current.id },
         data: { status: "open", startPriceSatang: 0, minIncrementSatang: 25000, currentPriceSatang: 0, leadingUserId: null, winnerUserId: null }
