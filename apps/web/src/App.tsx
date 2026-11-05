@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react";
+import { MenuSection, type MenuCategory, type MenuImages } from "./components/MenuSection";
+import { ReviewSection, type Review } from "./components/ReviewSection";
+import { LocationSection } from "./components/LocationSection";
+import { GallerySection } from "./components/GallerySection";
+import { QuickBookingSection } from "./components/QuickBookingSection";
+import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { api, assetUrl } from "./lib/api";
 import { LoginPage, RegisterPage } from "./features/auth/AuthPages";
 import { useAuth } from "./features/auth/AuthContext";
-import { ProfileDashboard } from "./features/dashboard/ProfileDashboard";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { ProfileDropdown } from "./features/auth/ProfileDropdown";
 import { BookingPage } from "./features/booking/BookingPage";
 import { PackagesPage } from "./features/packages/PackagesPage";
@@ -25,6 +30,136 @@ const links = [
   ["/tickets", "Ticket ของฉัน"],
   ["/booking", "จองโต๊ะ"]
 ];
+
+function apiErrorMessage(reason: unknown, fallback: string) {
+  if (typeof reason === "object" && reason !== null && "response" in reason) {
+    const response = (reason as { response?: { data?: { error?: string } } }).response;
+    if (response?.data?.error) return response.data.error;
+  }
+  return fallback;
+}
+
+function MenuFeature({ isAdmin }: { isAdmin: boolean }) {
+  const [images, setImages] = useState<MenuImages>({ food: "", drinks: "" });
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    api.get<MenuImages>("/menu/images")
+      .then(({ data }) => {
+        if (!active) return;
+        setImages({
+          food: assetUrl(data.food) ?? "",
+          drinks: assetUrl(data.drinks) ?? ""
+        });
+        setLoadError("");
+      })
+      .catch((error: unknown) => {
+        console.error("MENU IMAGE LOAD ERROR", error);
+        if (active) setLoadError("โหลดรูปเมนูไม่สำเร็จ");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function uploadMenuImage(category: MenuCategory, file: File) {
+    const form = new FormData();
+    form.append("photo", file);
+
+    try {
+      const { data } = await api.post<{ imageUrl: string }>(`/admin/menu/${category}/image`, form);
+      setImages((current) => ({ ...current, [category]: assetUrl(data.imageUrl) ?? "" }));
+    } catch (error) {
+      console.error("MENU IMAGE UPLOAD ERROR", error);
+      throw new Error(apiErrorMessage(error, "อัปโหลดรูปไม่สำเร็จ กรุณาลองอีกครั้ง"));
+    }
+  }
+
+  async function deleteMenuImage(category: MenuCategory) {
+    try {
+      await api.delete(`/admin/menu/${category}/image`);
+      setImages((current) => ({ ...current, [category]: "" }));
+    } catch (error) {
+      console.error("MENU IMAGE DELETE ERROR", error);
+      throw new Error(apiErrorMessage(error, "ลบรูปไม่สำเร็จ กรุณาลองอีกครั้ง"));
+    }
+  }
+
+  return (
+    <MenuSection
+      images={images}
+      isAdmin={isAdmin}
+      onUpload={uploadMenuImage}
+      onDelete={deleteMenuImage}
+      loadError={loadError}
+    />
+  );
+}
+
+type ReviewSummary = {
+  reviews: Review[];
+  averageRating: number;
+  totalReviews: number;
+};
+
+function ReviewFeature({ canReview }: { canReview: boolean }) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const refreshReviews = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get<ReviewSummary>("/reviews");
+      setReviews(data.reviews);
+      setAverageRating(data.averageRating);
+      setTotalReviews(data.totalReviews);
+      setLoadError("");
+    } catch (error) {
+      console.error("REVIEW LOAD ERROR", error);
+      setLoadError("โหลดรีวิวไม่สำเร็จ กรุณาลองใหม่ภายหลัง");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshReviews();
+  }, [refreshReviews]);
+
+  async function submitReview(rating: number, comment: string) {
+    try {
+      const { data } = await api.post<{
+        review: Review;
+        averageRating: number;
+        totalReviews: number;
+      }>("/reviews", { rating, comment });
+      setReviews((current) => [data.review, ...current.filter((review) => review.id !== data.review.id)]);
+      setAverageRating(data.averageRating);
+      setTotalReviews(data.totalReviews);
+    } catch (error) {
+      console.error("REVIEW SUBMIT ERROR", error);
+      throw new Error(apiErrorMessage(error, "ส่งรีวิวไม่สำเร็จ กรุณาลองอีกครั้ง"));
+    }
+  }
+
+  return (
+    <ReviewSection
+      reviews={reviews}
+      averageRating={averageRating}
+      totalReviews={totalReviews}
+      loading={loading}
+      loadError={loadError}
+      canReview={canReview}
+      onSubmitReview={submitReview}
+      onRefreshReviews={refreshReviews}
+    />
+  );
+}
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -136,6 +271,8 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function Home() {
+  const { user } = useAuth();
+
   return (
     <section className="mx-auto max-w-6xl px-5 pb-20 pt-16">
       {/* Pill Badge */}
@@ -186,7 +323,14 @@ function Home() {
         </div>
       </div>
 
+      <GallerySection />
+
+      <QuickBookingSection />
+
       <div className="mt-12 grid gap-4 md:grid-cols-3">
+        <MenuFeature isAdmin={user?.role === "admin"} />
+        <ReviewFeature canReview={user?.role === "customer" || user?.role === "admin"} />
+        <LocationSection />
         <Feature
           tag="Booking"
           title="จองง่าย คล่องตัว"
@@ -330,7 +474,7 @@ export default function App() {
       <Layout>
         <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<ProfileDashboard />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/hosts" element={<Hosts />} />
           <Route path="/admin/hosts" element={<AdminRoute><AdminHostsPage /></AdminRoute>} />
           <Route path="/admin/auction" element={<AdminRoute><AuctionPage /></AdminRoute>} />

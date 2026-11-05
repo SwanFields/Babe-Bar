@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { CreateAccountInput, Role, UserProfileDto, UserStatus } from "@babe-bar/shared";
 import { api } from "../../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 
 // Helper for formatting Thai dates
 function formatThaiDate(dateString: string | null | undefined): string {
@@ -136,6 +137,28 @@ export function ProfileDashboard() {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserProfileDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // แอดมินลบได้เฉพาะบัญชีลูกค้าคนอื่น (ไม่ใช่ตัวเอง/พนักงาน/แอดมิน/บัญชีที่ลบไปแล้ว)
+  const canDelete = (user: UserProfileDto) =>
+    user.role === "customer" && user.id !== currentUser?.id && user.status !== "deleted";
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/users/${deleteTarget.id}`);
+      setUsers((prev) => prev.map((u) => (u.id === deleteTarget.id ? { ...u, status: "deleted" as UserStatus } : u)));
+      if (selectedUser?.id === deleteTarget.id) setSelectedUser(null);
+      showNotice(`ลบบัญชี @${deleteTarget.username} เรียบร้อยแล้ว`);
+    } catch (e: any) {
+      showNotice(e?.response?.data?.error ?? "ไม่สามารถลบบัญชีได้");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -162,17 +185,6 @@ export function ProfileDashboard() {
 
   const toggleUserDetails = (userId: string) => {
     setExpandedUserId((currentId) => (currentId === userId ? null : userId));
-  };
-
-  // Quick Seed Sample Data
-  const handleSeedSamples = async () => {
-    try {
-      const res = await api.post("/users/seed-sample");
-      showNotice(res.data.message ?? "เพิ่มบัญชีตัวอย่างสำเร็จ");
-      await fetchUsers();
-    } catch (e: any) {
-      showNotice(e?.response?.data?.error ?? "ไม่สามารถสร้างข้อมูลตัวอย่างได้");
-    }
   };
 
   // Switch session account
@@ -276,118 +288,68 @@ export function ProfileDashboard() {
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-300">
-              Accounts Directory
-            </span>
+      {/* Header */}
+      <header className="relative isolate pb-6 pt-2">
+        <div className="db-aurora" aria-hidden="true"><span /><span /><span /></div>
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
                 dataSource === "prisma"
-                  ? "border border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300"
-                  : "border border-amber-500/20 bg-amber-500/[0.08] text-amber-300"
+                  ? "bg-emerald-500/[0.1] text-emerald-300"
+                  : "bg-amber-500/[0.1] text-amber-300"
               }`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${dataSource === "prisma" ? "bg-emerald-400" : "bg-amber-400"}`} />
-              {dataSource === "prisma" ? "PostgreSQL (Prisma)" : "Local Database"}
+              {dataSource === "prisma" ? "ฐานข้อมูล PostgreSQL" : "ฐานข้อมูลในเครื่อง"}
             </span>
+            <h1 className="db-title mt-3">บัญชีผู้ใช้ทั้งหมด</h1>
+            <p className="mt-2 max-w-md text-sm text-slate-400">ดูรายชื่อสมาชิก สลับล็อกอิน สร้างบัญชี และลบบัญชีลูกค้าของ Babe Bar</p>
           </div>
 
-          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-white sm:text-4xl">
-            แดชบอร์ดโปรไฟล์บัญชี
-          </h1>
-          <p className="mt-1 text-xs text-slate-400 sm:text-sm">
-            จัดการและดูรายละเอียดโปรไฟล์ผู้ใช้งานทั้งหมดในระบบ Babe Bar
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button onClick={fetchUsers} disabled={loading} className="btn-outline !min-h-9 !px-3.5 !py-1.5 text-xs" title="รีเฟรชข้อมูลล่าสุด">
+              <svg className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="ml-1.5">รีเฟรช</span>
+            </button>
+            <button onClick={() => setIsCreateOpen(true)} className="btn-primary !min-h-9 !px-4 !py-1.5 text-xs">
+              <span className="mr-1 text-base leading-none">+</span>
+              <span>สร้างบัญชีใหม่</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ภาพรวม: แถบสัดส่วนบทบาท */}
+      <section className="db-overview" aria-label="ภาพรวมบัญชี">
+        <div>
+          <p className="font-display text-5xl font-bold leading-none text-white">
+            {stats.total}
+            <span className="ml-2 text-base font-medium text-slate-400">บัญชี</span>
           </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={fetchUsers}
-            disabled={loading}
-            className="btn-outline !min-h-9 !px-3.5 !py-1.5 text-xs"
-            title="รีเฟรชข้อมูลล่าสุด"
-          >
-            <svg
-              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            <span className="ml-1.5">รีเฟรช</span>
-          </button>
-
-          <button
-            onClick={handleSeedSamples}
-            className="btn-outline !min-h-9 !px-3.5 !py-1.5 text-xs"
-            title="เพิ่มบัญชีตัวอย่างเพื่อทดสอบ"
-          >
-            <span>เติมข้อมูลตัวอย่าง</span>
-          </button>
-
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary !min-h-9 !px-4 !py-1.5 text-xs"
-          >
-            <span className="text-base leading-none mr-1">+</span>
-            <span>สร้างโปรไฟล์ใหม่</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Summary Cards (Minimal & Sleek) */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="card !p-4 !rounded-xl">
-          <p className="text-[11px] font-medium text-slate-400">บัญชีทั้งหมด</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-white">{stats.total}</p>
-          <p className="mt-1 text-[11px] text-emerald-400">ปกติ {stats.active} บัญชี</p>
-        </div>
-
-        <div className="card !p-4 !rounded-xl border-rose-500/15 bg-rose-500/[0.03]">
-          <p className="text-[11px] font-medium text-rose-300">ผู้ดูแล (Admins)</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-rose-300">{stats.admins}</p>
-          <p className="mt-1 text-[11px] text-slate-400">สิทธิ์สูงสุด</p>
-        </div>
-
-        <div className="card !p-4 !rounded-xl border-teal-500/15 bg-teal-500/[0.03]">
-          <p className="text-[11px] font-medium text-teal-300">พนักงาน (Staff)</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-teal-300">{stats.staff}</p>
-          <p className="mt-1 text-[11px] text-slate-400">บริการและโต๊ะ</p>
-        </div>
-
-        <div className="card !p-4 !rounded-xl border-amber-500/15 bg-amber-500/[0.03]">
-          <p className="text-[11px] font-medium text-amber-300">ลูกค้า (Customers)</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-amber-300">{stats.customers}</p>
-          <p className="mt-1 text-[11px] text-slate-400">สมาชิกในร้าน</p>
-        </div>
-
-        <div className="card !p-4 !rounded-xl">
-          <p className="text-[11px] font-medium text-slate-400">สถานะ Active</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-emerald-400">{stats.active}</p>
-          <p className="mt-1 text-[11px] text-slate-400">
-            {stats.total > 0 ? `${Math.round((stats.active / stats.total) * 100)}% พร้อมใช้งาน` : "0%"}
+          <p className="mt-3 text-sm text-slate-400">
+            ใช้งานปกติ {stats.active} บัญชี{stats.total > 0 ? ` (${Math.round((stats.active / stats.total) * 100)}%)` : ""}
           </p>
+          <p className="text-sm text-slate-500">อายุเฉลี่ย {stats.avgAge} ปี</p>
         </div>
-
-        <div className="card !p-4 !rounded-xl">
-          <p className="text-[11px] font-medium text-slate-400">อายุเฉลี่ย</p>
-          <p className="mt-1.5 font-display text-2xl font-bold text-white">{stats.avgAge} <span className="text-xs font-normal text-slate-400">ปี</span></p>
-          <p className="mt-1 text-[11px] text-teal-300">ผ่านเกณฑ์ 20+</p>
+        <div>
+          <div className="db-split" role="img" aria-label={`ผู้ดูแล ${stats.admins} พนักงาน ${stats.staff} ลูกค้า ${stats.customers}`}>
+            <span style={{ flexGrow: stats.admins, background: "#fb7185", display: stats.admins ? undefined : "none" }} />
+            <span style={{ flexGrow: stats.staff, background: "#2dd4bf", display: stats.staff ? undefined : "none" }} />
+            <span style={{ flexGrow: stats.customers, background: "#fbbf24", display: stats.customers ? undefined : "none" }} />
+          </div>
+          <div className="db-legend">
+            <span><i style={{ background: "#fb7185" }} />ผู้ดูแล<b>{stats.admins}</b></span>
+            <span><i style={{ background: "#2dd4bf" }} />พนักงาน<b>{stats.staff}</b></span>
+            <span><i style={{ background: "#fbbf24" }} />ลูกค้า<b>{stats.customers}</b></span>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Search, Filter & Controls Toolbar */}
-      <div className="mt-6 rounded-2xl border border-white/[0.08] bg-night-900/40 p-3.5 backdrop-blur-md">
+      <div className="mt-6 rounded-3xl bg-night-900/40 p-3.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.07)] backdrop-blur-md">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -524,110 +486,77 @@ export function ProfileDashboard() {
             >
               ล้างตัวกรองทั้งหมด
             </button>
-            <button onClick={handleSeedSamples} className="btn-primary !min-h-9 !py-1 text-xs">
-              เพิ่มบัญชีตัวอย่าง
-            </button>
           </div>
         </div>
       )}
 
-      {/* View Mode 1: Grid Cards View */}
+      {/* View Mode 1: บัตรสมาชิก */}
       {!loading && viewMode === "grid" && filteredUsers.length > 0 && (
-        <div className="mt-5 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => {
             const isCurrent = currentUser?.id === user.id;
-            const isExpanded = expandedUserId === user.id;
+            const dim = user.status === "deleted";
 
             return (
-              <div
+              <article
                 key={user.id}
-                className={`card relative flex h-fit flex-col justify-between transition-all duration-150 hover:-translate-y-0.5 ${
-                  isCurrent ? "border-teal-500/30 bg-night-900/80" : ""
-                }`}
+                className={`db-tile db-role-${user.role} ${isCurrent ? "is-me" : ""} ${dim ? "opacity-55" : ""}`}
               >
-                {/* Current User Badge */}
-                {isCurrent && (
-                  <div className="absolute -top-2.5 right-4 rounded-full border border-teal-500/40 bg-night-950 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-teal-300">
-                    เซสชันปัจจุบัน
-                  </div>
-                )}
-
-                <div>
-                  {/* Card Header: Avatar & Roles */}
-                  <div className="flex items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-3">
-                      <UserAvatar name={user.fullName} role={user.role} size="md" />
-                      <div>
-                        <h3 className="font-display text-base font-semibold text-white leading-tight">
-                          {user.fullName}
-                        </h3>
-                        <p className="text-[11px] font-mono text-slate-400">@{user.username}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => toggleUserDetails(user.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-                      aria-expanded={isExpanded}
-                      aria-label={isExpanded ? "ซ่อนรายละเอียด" : "แสดงรายละเอียด"}
-                      title={isExpanded ? "ซ่อนรายละเอียด" : "แสดงรายละเอียด"}
-                    >
-                      <svg className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="dashboard-details-slide mt-4 space-y-3 border-t border-white/[0.06] pt-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                <div className="p-5 pb-6">
+                  <div className="flex items-start gap-3.5">
+                    <UserAvatar name={user.fullName} role={user.role} size="lg" />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-display text-lg font-semibold leading-tight text-white">{user.fullName}</h3>
+                      <p className="truncate font-mono text-xs text-slate-400">@{user.username}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         <RoleBadge role={user.role} />
                         <StatusBadge status={user.status} />
-                        <span className="text-[11px] text-slate-400">อายุ <strong className="text-slate-200">{user.age}</strong> ปี</span>
-                      </div>
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-[11px] text-slate-400">อีเมล</span>
-                          <span className="max-w-[180px] truncate font-mono text-[11px] text-slate-200" title={user.email}>{user.email}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">เบอร์โทร</span>
-                          <span className="font-mono text-[11px] text-slate-200">{user.phone}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">วันเกิด</span>
-                          <span className="text-[11px] text-slate-300">{formatBirthDate(user.birthDate)}</span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-1 rounded-xl bg-night-950/60 p-2 text-center text-xs">
-                        <div><p className="text-[9px] text-slate-500">จองโต๊ะ</p><p className="font-display text-xs font-medium text-slate-200">{user.activity.bookings}</p></div>
-                        <div className="border-x border-white/[0.04]"><p className="text-[9px] text-slate-500">ประมูล</p><p className="font-display text-xs font-medium text-teal-300">{user.activity.bids}</p></div>
-                        <div><p className="text-[9px] text-slate-500">E-Tickets</p><p className="font-display text-xs font-medium text-amber-300">{user.activity.tickets}</p></div>
                       </div>
                     </div>
+                  </div>
+
+                  <dl className="mt-4 space-y-1 text-xs text-slate-400">
+                    <div className="flex gap-2"><dt className="w-12 shrink-0 text-slate-500">อีเมล</dt><dd className="truncate text-slate-300">{user.email}</dd></div>
+                    <div className="flex gap-2"><dt className="w-12 shrink-0 text-slate-500">โทร</dt><dd className="text-slate-300">{user.phone}</dd></div>
+                    <div className="flex gap-2"><dt className="w-12 shrink-0 text-slate-500">กิจกรรม</dt><dd className="text-slate-300">จอง {user.activity.bookings} ประมูล {user.activity.bids} ตั๋ว {user.activity.tickets}</dd></div>
+                  </dl>
+                  {isCurrent && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-teal-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                      บัญชีที่คุณใช้อยู่ตอนนี้
+                    </p>
                   )}
                 </div>
 
-                {/* Card Actions */}
-                <div className="mt-4 flex items-center gap-2 border-t border-white/[0.04] pt-3">
+                <div className="db-perf" aria-hidden="true" />
+                <div className="db-tile-foot">
                   <button
                     onClick={() => setSelectedUser(user)}
-                    className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                    className="flex-1 rounded-xl bg-white/[0.06] py-2 text-xs font-medium text-slate-100 transition hover:bg-white/[0.12]"
                   >
                     ดูรายละเอียด
                   </button>
                   <button
                     onClick={() => handleSwitchUser(user)}
-                    disabled={isCurrent}
-                    className={`rounded-xl px-3 py-1.5 text-xs font-medium transition ${
-                      isCurrent
-                        ? "bg-white/[0.02] text-slate-500 cursor-not-allowed"
-                        : "border border-teal-500/30 bg-teal-500/[0.08] text-teal-300 hover:bg-teal-500/15"
+                    disabled={isCurrent || dim}
+                    className={`rounded-xl px-3 py-2 text-xs font-medium transition ${
+                      isCurrent || dim
+                        ? "cursor-not-allowed text-slate-600"
+                        : "bg-teal-500/10 text-teal-300 hover:bg-teal-500/20"
                     }`}
                   >
-                    {isCurrent ? "ใช้งานอยู่" : "สลับล็อกอิน"}
+                    สลับล็อกอิน
                   </button>
+                  {canDelete(user) && (
+                    <button
+                      onClick={() => setDeleteTarget(user)}
+                      className="rounded-xl px-3 py-2 text-xs font-medium text-rose-300 transition hover:bg-rose-500/10"
+                    >
+                      ลบ
+                    </button>
+                  )}
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -689,6 +618,14 @@ export function ProfileDashboard() {
                           >
                             สลับ
                           </button>
+                          {canDelete(user) && (
+                            <button
+                              onClick={() => setDeleteTarget(user)}
+                              className="rounded-lg border border-rose-500/30 bg-rose-500/[0.08] px-2.5 py-1 text-xs font-medium text-rose-300 hover:bg-rose-500/15"
+                            >
+                              ลบ
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -761,6 +698,25 @@ export function ProfileDashboard() {
 }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        tone="danger"
+        title="ยืนยันการลบบัญชีลูกค้าหรือไม่?"
+        confirmLabel="ยืนยัน ลบบัญชี"
+        busy={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void handleDeleteUser()}
+      >
+        {deleteTarget && (
+          <>
+            <p>
+              บัญชี <span className="font-semibold text-white">{deleteTarget.fullName}</span> (@{deleteTarget.username}) จะถูกปิดและเข้าสู่ระบบไม่ได้อีก
+            </p>
+            <p className="text-rose-300">ประวัติการจองและการชำระเงินจะยังถูกเก็บไว้ในระบบ</p>
+          </>
+        )}
+      </ConfirmDialog>
 
       {/* Modal 2: Create New Profile Modal */}
       {isCreateOpen && (

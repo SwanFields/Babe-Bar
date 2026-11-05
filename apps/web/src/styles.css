@@ -142,6 +142,111 @@
   text-shadow: 0 0 8px rgba(250, 204, 21, 0.6), 0 0 24px rgba(250, 204, 21, 0.22);
 }
 
+/* ---------- Dashboard: บัตรสมาชิก (pass) ---------- */
+.db-role-admin { --accent: 244 63 94; }
+.db-role-staff { --accent: 45 212 191; }
+.db-role-customer { --accent: 251 191 36; }
+
+.db-title { font-family: Kanit, sans-serif; font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; color: #fff; letter-spacing: -0.01em; }
+
+/* ตั๋ว: พื้นไล่สีตามบทบาท + รอยเว้าที่รอยปรุ (ใช้ mask จึงโปร่งใสจริง ไม่ต้องเดาสีพื้นหลัง) */
+.db-pass, .db-tile {
+  --accent: 251 191 36;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgb(var(--accent) / 0.17), transparent 55%),
+    linear-gradient(180deg, rgba(23, 29, 43, 0.92), rgba(14, 18, 27, 0.95));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  border-radius: 1.5rem;
+}
+
+/* การ์ดสมาชิกฝั่งแอดมิน: รอยปรุแนวนอนเหนือแถวปุ่ม */
+.db-tile {
+  --foot: 4.5rem;
+  display: flex;
+  flex-direction: column;
+  -webkit-mask:
+    radial-gradient(circle 0.7rem at 0 calc(100% - var(--foot)), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 0.7rem at 100% calc(100% - var(--foot)), #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 0.7rem at 0 calc(100% - var(--foot)), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 0.7rem at 100% calc(100% - var(--foot)), #0000 97%, #000) right / 51% 100% no-repeat;
+  transition: box-shadow 160ms;
+}
+.db-tile:hover { box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.45); }
+.db-tile.is-me { box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.5); }
+.db-perf { position: absolute; left: 1.25rem; right: 1.25rem; bottom: var(--foot); border-top: 1.5px dashed rgba(255, 255, 255, 0.14); pointer-events: none; }
+.db-tile-foot { margin-top: auto; height: var(--foot); display: flex; align-items: center; gap: 0.5rem; padding: 0 1.25rem; }
+
+/* บัตรสมาชิกฝั่งลูกค้า: มือถือ = ก้านตั๋วอยู่ล่าง, จอกว้าง = ก้านตั๋วอยู่ขวา */
+.db-pass { --stub-h: 6.5rem; --stub-w: 15rem; display: grid; grid-template-columns: 1fr; overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle 0.8rem at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 0.8rem at 100% calc(100% - var(--stub-h)), #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 0.8rem at 0 calc(100% - var(--stub-h)), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 0.8rem at 100% calc(100% - var(--stub-h)), #0000 97%, #000) right / 51% 100% no-repeat;
+}
+.db-pass-main { padding: 1.75rem 1.5rem 1.5rem; }
+.db-pass-stub { height: var(--stub-h); display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1.5rem; position: relative; }
+.db-pass-stub::before { content: ""; position: absolute; left: 1.25rem; right: 1.25rem; top: 0; border-top: 1.5px dashed rgba(255, 255, 255, 0.16); }
+@media (min-width: 768px) {
+  .db-pass { grid-template-columns: 1fr var(--stub-w);
+    -webkit-mask:
+      radial-gradient(circle 0.8rem at calc(100% - var(--stub-w)) 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 0.8rem at calc(100% - var(--stub-w)) 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle 0.8rem at calc(100% - var(--stub-w)) 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 0.8rem at calc(100% - var(--stub-w)) 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+  }
+  .db-pass-main { padding: 2.25rem 2.25rem 2rem; }
+  .db-pass-stub { height: auto; flex-direction: column; align-items: flex-start; justify-content: center; padding: 1.5rem 1.75rem; }
+  .db-pass-stub::before { left: 0; right: auto; top: 1.25rem; bottom: 1.25rem; border-top: 0; border-left: 1.5px dashed rgba(255, 255, 255, 0.16); }
+}
+
+/* ตัวอักษรย่อบนบัตร: วงแหวนเรืองสีตามบทบาท */
+.db-monogram { display: grid; place-items: center; flex: none; width: 4.75rem; height: 4.75rem; border-radius: 9999px; font-family: Kanit, sans-serif; font-weight: 600; font-size: 1.5rem; letter-spacing: 0.05em; color: rgb(var(--accent));
+  background: radial-gradient(circle at 30% 25%, rgb(var(--accent) / 0.28), rgb(var(--accent) / 0.06));
+  box-shadow: inset 0 0 0 1.5px rgb(var(--accent) / 0.55), 0 0 32px -4px rgb(var(--accent) / 0.45); }
+
+/* แถวข้อมูล: ไม่มีกรอบ ใช้เส้นบางคั่น และช่องกรอกแบบเส้นใต้ */
+.db-row { display: flex; align-items: center; gap: 0.9rem; padding: 0.95rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.db-row:last-child { border-bottom: 0; }
+.db-row-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; background: rgba(255, 255, 255, 0.05); color: #94a3b8; }
+.db-row-icon svg { width: 1.05rem; height: 1.05rem; }
+.db-line { width: 100%; background: transparent; border: 0; border-bottom: 1.5px solid rgba(255, 255, 255, 0.18); padding: 0.2rem 0; color: #fff; font-size: 1rem; outline: none; transition: border-color 150ms; }
+.db-line:focus { border-bottom-color: #fb7185; }
+
+/* รายการกิจกรรม: ลิงก์ไปหน้าที่เกี่ยวข้อง */
+.db-link { display: flex; align-items: center; gap: 1rem; padding: 1rem 0.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); color: #e2e8f0; transition: padding 180ms, color 180ms; }
+.db-link:last-child { border-bottom: 0; }
+.db-link:hover { padding-left: 0.75rem; color: #fff; }
+.db-link b { margin-left: auto; font-family: Kanit, sans-serif; font-weight: 600; font-size: 1.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* ภาพรวมบัญชี (แอดมิน): แถบสัดส่วนบทบาทแถบเดียวแทนการ์ด KPI หกใบ */
+.db-overview { display: grid; gap: 1.5rem; align-items: center; padding: 1.5rem 1.75rem; border-radius: 1.5rem;
+  background: linear-gradient(120deg, rgba(244, 63, 94, 0.08), rgba(45, 212, 191, 0.05) 60%, transparent), rgba(16, 20, 30, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+@media (min-width: 768px) { .db-overview { grid-template-columns: auto 1fr; gap: 3rem; } }
+.db-split { display: flex; gap: 3px; height: 0.9rem; border-radius: 9999px; overflow: hidden; background: rgba(255, 255, 255, 0.06); }
+.db-split span { min-width: 0.5rem; transition: flex-grow 600ms cubic-bezier(0.22, 1, 0.36, 1); }
+.db-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 0.8rem; font-size: 0.8rem; color: #94a3b8; }
+.db-legend i { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.45rem; border-radius: 9999px; }
+.db-legend b { margin-left: 0.4rem; color: #fff; font-weight: 600; }
+
+/* แสงพื้นหลังของ dashboard: อยู่ในกรอบของหัวหน้าเท่านั้น ไม่ล้นไปทับแถบแอดมิน/เมนู และเฟดหายทั้งบนและล่าง */
+.db-aurora { position: absolute; inset: 0 -1rem; z-index: -1; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 55%, transparent); }
+.db-aurora span { position: absolute; border-radius: 9999px; filter: blur(60px); opacity: 0.3; }
+.db-aurora span:nth-child(1) { width: 16rem; height: 12rem; left: 3rem; top: 0.5rem; background: #f43f5e; animation: au-drift-a 14s ease-in-out infinite; }
+.db-aurora span:nth-child(2) { width: 14rem; height: 11rem; right: 6%; top: 1rem; background: #14b8a6; opacity: 0.22; animation: au-drift-b 17s ease-in-out infinite; }
+.db-aurora span:nth-child(3) { width: 10rem; height: 9rem; left: 42%; top: 1.5rem; background: #f59e0b; opacity: 0.16; animation: au-drift-a 20s ease-in-out infinite reverse; }
+@media (prefers-reduced-motion: reduce) { .db-aurora span { animation: none !important; } }
+
+@media (prefers-reduced-motion: reduce) { .db-split span, .db-link { transition: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   .dashboard-details-slide,
   .au-reveal, .au-aurora span, .au-pot-glow, .au-status-open i, .au-bump, .au-mine-list li, .au-skeleton span, .au-pay-form, .au-alert, .au-admin-body {

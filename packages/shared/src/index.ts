@@ -35,6 +35,16 @@ export const updateUserStatusSchema = z.object({
   role: roleSchema.optional()
 });
 
+export const updateProfileSchema = z
+  .object({
+    fullName: z.string().trim().min(2, "ชื่อ-นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร").max(100, "ชื่อ-นามสกุลยาวเกินไป").optional(),
+    phone: z.string().trim().min(8, "เบอร์โทรศัพท์ต้องมีอย่างน้อย 8 ตัวอักษร").max(20, "เบอร์โทรศัพท์ยาวเกินไป").optional(),
+    username: z.string().regex(/^[a-z0-9_]{3,20}$/, "Username ต้องเป็น a-z, 0-9, _ ความยาว 3-20 ตัวอักษร").optional(),
+    email: z.string().email("อีเมลไม่ถูกต้อง").optional()
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, { message: "ไม่มีข้อมูลที่ต้องแก้ไข" });
+
 export const bookingSchema = z.object({
   tableId: z.number().int().positive(),
   businessDate: z.string().date(),
@@ -64,6 +74,7 @@ export type UserStatus = z.infer<typeof userStatusSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
 
 export type UserProfileDto = {

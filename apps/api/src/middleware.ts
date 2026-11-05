@@ -13,8 +13,6 @@ export const requireAuth = (
   _res: Response,
   next: NextFunction
 ) => {
-  console.log("AUTH HEADER =", req.headers.authorization);
-
   try {
     const header = req.headers.authorization;
 
@@ -24,8 +22,6 @@ export const requireAuth = (
 
     const payload = verifyAccess(header.slice(7));
 
-    console.log("AUTH PAYLOAD =", payload);
-
     req.user = {
       id: payload.sub,
       role: payload.role
@@ -33,8 +29,6 @@ export const requireAuth = (
 
     next();
   } catch (error) {
-    console.error("AUTH ERROR =", error);
-
     next(
       Object.assign(
         new Error("กรุณาเข้าสู่ระบบ"),

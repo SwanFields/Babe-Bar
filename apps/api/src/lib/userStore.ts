@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import net from "node:net";
 import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole, UserStatus } from "@prisma/client";
-import type { CreateAccountInput, RegisterInput, Role, UserProfileDto, UserStatus as SharedUserStatus } from "@babe-bar/shared";
+import type { CreateAccountInput, RegisterInput, UpdateProfileInput, Role, UserProfileDto, UserStatus as SharedUserStatus } from "@babe-bar/shared";
 
 function checkTcpPort(port = 5432, host = "127.0.0.1", timeoutMs = 800): Promise<boolean> {
   return new Promise((resolve) => {
@@ -524,6 +524,71 @@ class UserStoreManager {
     this.saveLocalFile();
 
     return this.formatUserDto(this.localUsers[index]);
+  }
+
+  async updateProfile(prisma: PrismaClient, id: string, data: UpdateProfileInput): Promise<UserProfileDto> {
+    const clean: { fullName?: string; phone?: string; username?: string; email?: string } = {};
+    if (data.fullName !== undefined) clean.fullName = data.fullName.trim();
+    if (data.phone !== undefined) clean.phone = data.phone.trim();
+    if (data.username !== undefined) clean.username = data.username.toLowerCase().trim();
+    if (data.email !== undefined) clean.email = data.email.toLowerCase().trim();
+
+    const ready = await this.isPrismaAvailable(prisma);
+    if (ready) {
+      try {
+        const updated = await prisma.user.update({
+          where: { id },
+          data: clean,
+          include: {
+            _count: { select: { bookings: true, bids: true, tickets: true, packageOrders: true, consents: true } }
+          }
+        });
+        return this.formatUserDto(updated);
+      } catch (error: any) {
+        if (error?.code === "P2002") {
+          throw Object.assign(new Error("อีเมล, เบอร์โทร หรือ Username นี้มีผู้ใช้งานแล้ว"), { status: 409 });
+        }
+        if (error?.code !== "P2025") console.warn("Prisma profile update error:", error);
+      }
+    }
+
+    this.ensureDataFile();
+    const index = this.localUsers.findIndex((u) => u.id === id);
+    if (index === -1) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
+    const clash = this.localUsers.some(
+      (u) =>
+        u.id !== id &&
+        ((clean.email && u.email.toLowerCase() === clean.email) ||
+          (clean.username && u.username.toLowerCase() === clean.username) ||
+          (clean.phone && u.phone === clean.phone))
+    );
+    if (clash) throw Object.assign(new Error("อีเมล, เบอร์โทร หรือ Username นี้มีผู้ใช้งานแล้ว"), { status: 409 });
+    Object.assign(this.localUsers[index], clean, { updatedAt: new Date().toISOString() });
+    this.saveLocalFile();
+    return this.formatUserDto(this.localUsers[index]);
+  }
+
+  /** ปิดบัญชีแบบ soft-delete: เก็บประวัติการจอง/ชำระเงินไว้ แต่ล็อกอินไม่ได้อีก */
+  async closeAccount(prisma: PrismaClient, id: string): Promise<void> {
+    const ready = await this.isPrismaAvailable(prisma);
+    if (ready) {
+      try {
+        await prisma.$transaction([
+          prisma.user.update({ where: { id }, data: { status: UserStatus.deleted, deletedAt: new Date() } }),
+          prisma.refreshSession.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } })
+        ]);
+        return;
+      } catch (error: any) {
+        if (error?.code !== "P2025") console.warn("Prisma close account error:", error);
+      }
+    }
+
+    this.ensureDataFile();
+    const index = this.localUsers.findIndex((u) => u.id === id);
+    if (index === -1) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
+    this.localUsers[index].status = "deleted";
+    this.localUsers[index].updatedAt = new Date().toISOString();
+    this.saveLocalFile();
   }
 
   async seedDemoAccounts(prisma: PrismaClient): Promise<{ added: number }> {

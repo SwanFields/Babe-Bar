@@ -16,7 +16,8 @@ import {
   checkoutSchema,
   auctionScheduleSchema,
   createAccountSchema,
-  updateUserStatusSchema
+  updateUserStatusSchema,
+  updateProfileSchema
 } from "@babe-bar/shared";
 import { accessToken, hashToken, randomToken } from "./lib/auth";
 import { AuthRequest, requireAuth, requireRole, validate } from "./middleware";
@@ -33,7 +34,15 @@ const prisma = new PrismaClient();
 const app = express();
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const hostUploadDir = path.resolve("uploads", "hosts");
+const menuUploadDir = path.resolve("uploads", "menu");
+const menuImageExtensions: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp"
+} as const;
+const menuCategories = ["food", "drinks"] as const;
 fs.mkdirSync(hostUploadDir, { recursive: true });
+fs.mkdirSync(menuUploadDir, { recursive: true });
 const hostUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, callback) => {
@@ -52,6 +61,45 @@ const hostUpload = multer({
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => callback(null, ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype))
 });
+const menuUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, callback) => callback(null, menuUploadDir),
+    filename: (req, file, callback) => {
+      const extension = menuImageExtensions[file.mimetype];
+      const category = req.params.category;
+      if (!extension || typeof category !== "string" || !isMenuCategory(category)) {
+        callback(new Error("รองรับไฟล์ JPG, PNG หรือ WEBP เท่านั้น"), "");
+        return;
+      }
+      callback(null, `${category}-${crypto.randomBytes(16).toString("hex")}${extension}`);
+    }
+  }),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) =>
+    callback(null, Object.prototype.hasOwnProperty.call(menuImageExtensions, file.mimetype))
+});
+
+function isMenuCategory(value: string): value is (typeof menuCategories)[number] {
+  return menuCategories.includes(value as (typeof menuCategories)[number]);
+}
+
+async function getMenuImageUrl(category: (typeof menuCategories)[number]) {
+  const files = await fs.promises.readdir(menuUploadDir);
+  const matchingFiles = files.filter((file) =>
+    new RegExp(`^${category}(?:-[a-f0-9]{32})?\\.(?:jpg|png|webp)$`, "i").test(file)
+  );
+  const fileStats = await Promise.all(
+    matchingFiles.map(async (fileName) => ({
+      fileName,
+      stats: await fs.promises.stat(path.join(menuUploadDir, fileName))
+    }))
+  );
+  const latestFile = fileStats
+    .filter(({ stats }) => stats.isFile())
+    .sort((left, right) => right.stats.mtimeMs - left.stats.mtimeMs)[0];
+
+  return latestFile ? `/uploads/menu/${latestFile.fileName}` : "";
+}
 
 async function ensureStripeCustomer(user: { id: string; email: string; fullName: string; stripeCustomerId: string | null }) {
   if (!stripe) throw Object.assign(new Error("ยังไม่ได้ตั้งค่า Stripe Test Mode"), { status: 503 });
@@ -140,24 +188,30 @@ app.get("/api/health", async (_req, res) => {
 
 // --- User Profiles & Dashboard APIs ---
 
-// 1. Get all accounts / profiles
-app.get("/api/users", async (_req, res, next) => {
+// ทุก route ในกลุ่มนี้ต้องล็อกอิน: ลูกค้า/พนักงานเห็นและแก้ได้เฉพาะบัญชีตัวเอง ส่วนการดูทั้งหมด/สร้าง/เปลี่ยนสิทธิ์/ลบ เป็นของแอดมินเท่านั้น
+
+// 1. Get accounts: admin = ทั้งหมด, คนอื่น = เฉพาะตัวเอง
+app.get("/api/users", requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    const result = await userStore.getAllUsers(prisma);
-    res.json({
-      total: result.users.length,
-      source: result.source,
-      users: result.users
-    });
+    if (req.user!.role === "admin") {
+      const result = await userStore.getAllUsers(prisma);
+      res.json({ total: result.users.length, source: result.source, users: result.users });
+      return;
+    }
+    const self = await userStore.getUserById(prisma, req.user!.id);
+    const users = self && self.status !== "deleted" ? [self] : [];
+    res.json({ total: users.length, source: "self", users });
   } catch (error) {
     next(error);
   }
 });
 
-// 2. Get specific account details
-app.get("/api/users/:id", async (req, res, next) => {
+// 2. Get specific account details (ตัวเอง หรือแอดมิน)
+app.get("/api/users/:id", requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    const user = await userStore.getUserById(prisma, String(req.params.id));
+    const id = String(req.params.id);
+    if (req.user!.role !== "admin" && req.user!.id !== id) throw Object.assign(new Error("ไม่มีสิทธิ์ใช้งาน"), { status: 403 });
+    const user = await userStore.getUserById(prisma, id);
     if (!user) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
     res.json(user);
   } catch (error) {
@@ -165,8 +219,8 @@ app.get("/api/users/:id", async (req, res, next) => {
   }
 });
 
-// 3. Create account from dashboard
-app.post("/api/users", validate(createAccountSchema), async (req, res, next) => {
+// 3. Create account from dashboard (แอดมินเท่านั้น)
+app.post("/api/users", requireAuth, requireRole("admin"), validate(createAccountSchema), async (req, res, next) => {
   try {
     const user = await userStore.createUser(prisma, req.body);
     res.status(201).json(user);
@@ -175,8 +229,8 @@ app.post("/api/users", validate(createAccountSchema), async (req, res, next) => 
   }
 });
 
-// 4. Update account status or role
-app.patch("/api/users/:id", validate(updateUserStatusSchema), async (req, res, next) => {
+// 4. Update account status or role (แอดมินเท่านั้น)
+app.patch("/api/users/:id", requireAuth, requireRole("admin"), validate(updateUserStatusSchema), async (req, res, next) => {
   try {
     const updated = await userStore.updateUserStatus(prisma, String(req.params.id), req.body);
     res.json(updated);
@@ -185,8 +239,23 @@ app.patch("/api/users/:id", validate(updateUserStatusSchema), async (req, res, n
   }
 });
 
-// 5. Seed sample demo accounts for testing
-app.post("/api/users/seed-sample", async (_req, res, next) => {
+// 4.1 ลบ (ปิด) บัญชีลูกค้าคนอื่น — แอดมินเท่านั้น, ลบได้เฉพาะบัญชี customer และลบตัวเองไม่ได้
+app.delete("/api/users/:id", requireAuth, requireRole("admin"), async (req: AuthRequest, res, next) => {
+  try {
+    const id = String(req.params.id);
+    if (id === req.user!.id) throw Object.assign(new Error("ไม่สามารถลบบัญชีของตัวเองได้"), { status: 400 });
+    const target = await userStore.getUserById(prisma, id);
+    if (!target) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
+    if (target.role !== "customer") throw Object.assign(new Error("ลบได้เฉพาะบัญชีลูกค้า"), { status: 403 });
+    await userStore.closeAccount(prisma, id);
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 5. Seed sample demo accounts for testing (แอดมินเท่านั้น)
+app.post("/api/users/seed-sample", requireAuth, requireRole("admin"), async (_req, res, next) => {
   try {
     const result = await userStore.seedDemoAccounts(prisma);
     const all = await userStore.getAllUsers(prisma);
@@ -235,7 +304,7 @@ app.post("/api/auth/register", validate(registerSchema), async (req, res, next) 
 app.post("/api/auth/login", validate(loginSchema), async (req, res, next) => {
   try {
     const user = await userStore.findByEmailOrUsername(prisma, req.body.email);
-    if (!user || !(await bcrypt.compare(req.body.password, user.passwordHash))) {
+    if (!user || user.status === "deleted" || !(await bcrypt.compare(req.body.password, user.passwordHash))) {
       throw Object.assign(new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง"), { status: 401 });
     }
 
@@ -269,10 +338,10 @@ app.post("/api/auth/login", validate(loginSchema), async (req, res, next) => {
 });
 
 // Quick switch / impersonate for testing accounts from dashboard
-app.post("/api/auth/switch-account/:id", async (req, res, next) => {
+app.post("/api/auth/switch-account/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
   try {
     const user = await userStore.getUserById(prisma, String(req.params.id));
-    if (!user) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
+    if (!user || user.status === "deleted") throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้นี้"), { status: 404 });
 
     const refresh = randomToken();
     res.cookie("refresh_token", refresh, {
@@ -338,8 +407,31 @@ app.post("/api/auth/logout", async (req, res, next) => {
 app.get("/api/me", requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const user = await userStore.getUserById(prisma, req.user!.id);
-    if (!user) throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้"), { status: 404 });
+    if (!user || user.status === "deleted") throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้"), { status: 404 });
     res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// แก้ไขข้อมูลส่วนตัวของตัวเอง (ชื่อ, เบอร์โทร, username, อีเมล) — ไม่รับ role/status/วันเกิด
+app.patch("/api/me", requireAuth, validate(updateProfileSchema), async (req: AuthRequest, res, next) => {
+  try {
+    const current = await userStore.getUserById(prisma, req.user!.id);
+    if (!current || current.status === "deleted") throw Object.assign(new Error("ไม่พบบัญชีผู้ใช้"), { status: 404 });
+    res.json(await userStore.updateProfile(prisma, req.user!.id, req.body));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ปิดบัญชีของตัวเอง (soft-delete) — แอดมินปิดเองไม่ได้ กันระบบไม่มีผู้ดูแล
+app.delete("/api/me", requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    if (req.user!.role === "admin") throw Object.assign(new Error("บัญชีผู้ดูแลระบบไม่สามารถปิดเองได้"), { status: 403 });
+    await userStore.closeAccount(prisma, req.user!.id);
+    res.clearCookie("refresh_token");
+    res.status(204).end();
   } catch (error) {
     next(error);
   }
@@ -371,6 +463,88 @@ app.get("/api/hosts", async (_req, res, next) => {
     ]);
   }
 });
+
+app.get("/api/menu/images", async (_req, res, next) => {
+  try {
+    res.json({
+      food: await getMenuImageUrl("food"),
+      drinks: await getMenuImageUrl("drinks")
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/reviews", async (_req, res, next) => {
+  try {
+    const [reviews, summary] = await Promise.all([
+      prisma.review.findMany({
+        include: { user: { select: { username: true } } },
+        orderBy: { createdAt: "desc" }
+      }),
+      prisma.review.aggregate({
+        _avg: { rating: true },
+        _count: { _all: true }
+      })
+    ]);
+
+    res.json({
+      reviews: reviews.map(({ id, user, rating, comment, createdAt }) => ({
+        id,
+        username: user.username,
+        rating,
+        comment,
+        createdAt
+      })),
+      averageRating: summary._avg.rating ?? 0,
+      totalReviews: summary._count._all
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post(
+  "/api/reviews",
+  requireAuth,
+  requireRole("customer", "admin"),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const rating: unknown = req.body?.rating;
+      const comment = typeof req.body?.comment === "string" ? req.body.comment.trim() : "";
+      if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5 || !comment || comment.length > 1000) {
+        throw Object.assign(new Error("กรุณาเลือกคะแนน 1-5 ดาวและเขียนความคิดเห็นไม่เกิน 1,000 ตัวอักษร"), { status: 400 });
+      }
+
+      const review = await prisma.review.create({
+        data: {
+          userId: req.user!.id,
+          rating,
+          comment
+        },
+        include: { user: { select: { username: true } } }
+      });
+      const summary = await prisma.review.aggregate({
+        _avg: { rating: true },
+        _count: { _all: true }
+      });
+
+      res.status(201).json({
+        review: {
+          id: review.id,
+          username: review.user.username,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt
+        },
+        averageRating: summary._avg.rating ?? 0,
+        totalReviews: summary._count._all
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 app.get("/api/admin/hosts", requireAuth, requireRole("admin"), async (_req, res, next) => {
   try {
@@ -457,6 +631,64 @@ app.post("/api/admin/hosts/:id/photo", requireAuth, requireRole("admin"), hostUp
     }
     const host = await prisma.host.update({ where: { id }, data: { photoUrl: `/uploads/hosts/${req.file.filename}` } });
     res.json(host);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post(
+  "/api/admin/menu/:category/image",
+  requireAuth,
+  requireRole("admin"),
+  (req, _res, next) => {
+    if (typeof req.params.category !== "string" || !isMenuCategory(req.params.category)) {
+      next(Object.assign(new Error("หมวดหมู่เมนูไม่ถูกต้อง"), { status: 400 }));
+      return;
+    }
+    next();
+  },
+  (req, res, next) => {
+    menuUpload.single("photo")(req, res, (error) => {
+      if (error instanceof multer.MulterError) {
+        next(Object.assign(error, { status: 400, message: "รองรับไฟล์ JPG, PNG หรือ WEBP ขนาดไม่เกิน 3MB" }));
+        return;
+      }
+      next(error);
+    });
+  },
+  async (req, res, next) => {
+    try {
+      const category = req.params.category;
+      if (!req.file || typeof category !== "string" || !isMenuCategory(category)) {
+        throw Object.assign(new Error("กรุณาเลือกไฟล์ JPG, PNG หรือ WEBP ขนาดไม่เกิน 3MB"), { status: 400 });
+      }
+
+      const currentFileName = path.basename(req.file.filename);
+      const previousFiles = (await fs.promises.readdir(menuUploadDir)).filter(
+        (fileName) =>
+          fileName !== currentFileName &&
+          new RegExp(`^${category}(?:-[a-f0-9]{32})?\\.(?:jpg|png|webp)$`, "i").test(fileName)
+      );
+      await Promise.all(previousFiles.map((fileName) => fs.promises.unlink(path.join(menuUploadDir, fileName))));
+
+      res.json({ imageUrl: await getMenuImageUrl(category) });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.delete("/api/admin/menu/:category/image", requireAuth, requireRole("admin"), async (req, res, next) => {
+  try {
+    const category = req.params.category;
+    if (typeof category !== "string" || !isMenuCategory(category)) {
+      throw Object.assign(new Error("หมวดหมู่เมนูไม่ถูกต้อง"), { status: 400 });
+    }
+
+    const imagePattern = new RegExp(`^${category}(?:-[a-f0-9]{32})?\\.(?:jpg|png|webp)$`, "i");
+    const imageFiles = (await fs.promises.readdir(menuUploadDir)).filter((fileName) => imagePattern.test(fileName));
+    await Promise.all(imageFiles.map((fileName) => fs.promises.unlink(path.join(menuUploadDir, fileName))));
+    res.json({ imageUrl: "" });
   } catch (error) {
     next(error);
   }
