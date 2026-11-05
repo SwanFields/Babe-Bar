@@ -17,6 +17,8 @@ type Ticket = {
 };
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+// ป้องกันกรณีข้อมูลยังไม่ถูกอัปเดตจากเซิร์ฟเวอร์: ถ้าเลยเวลาหมดอายุแล้ว ให้ถือว่าหมดอายุเสมอ
+const effectiveStatus = (ticket: Pick<Ticket, "status" | "validUntil">) => ticket.status === "active" && new Date(ticket.validUntil).getTime() < Date.now() ? "expired" : ticket.status;
 const statusLabel = (status: string) => status === "active" ? "ยังใช้งานได้" : status === "used" ? "ใช้งานแล้ว" : status === "expired" ? "หมดอายุ" : "ยกเลิก";
 
 function TicketQr({ ticketCode, size }: { ticketCode: string; size: number }) {
@@ -79,7 +81,7 @@ export function TicketsPage() {
         <div className="flex justify-center"><div className="rounded-2xl bg-white p-3 shadow-lg"><TicketQr ticketCode={selected.ticketCode} size={208} /></div></div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-white/[.03] p-4"><p className="text-xs text-slate-500">เวลาที่จ่ายเงิน</p><p className="mt-1 text-sm text-white">{selected.payment?.paidAt ? formatDate(selected.payment.paidAt) : "ไม่พบข้อมูล"}</p></div>
-          <div className="rounded-xl border border-white/10 bg-white/[.03] p-4"><p className="text-xs text-slate-500">สถานะการใช้งาน</p><p className={`mt-1 text-sm font-semibold ${selected.status === "active" ? "text-teal-300" : "text-rose-300"}`}>{statusLabel(selected.status)}</p></div>
+          <div className="rounded-xl border border-white/10 bg-white/[.03] p-4"><p className="text-xs text-slate-500">สถานะการใช้งาน</p><p className={`mt-1 text-sm font-semibold ${effectiveStatus(selected) === "active" ? "text-teal-300" : "text-rose-300"}`}>{statusLabel(effectiveStatus(selected))}</p></div>
           <div className="rounded-xl border border-white/10 bg-white/[.03] p-4 sm:col-span-2"><p className="text-xs text-slate-500">วันหมดอายุ Ticket</p><p className="mt-1 text-sm text-white">{formatDate(selected.validUntil)}</p></div>
         </div>
         {selected.booking && <div className="border-t border-white/10 pt-5 text-sm text-slate-300">โต๊ะ {selected.booking.table.tableNo} · {selected.booking.table.zone.nameTh} · {selected.booking.partySizeRange} คน</div>}
@@ -115,12 +117,12 @@ export function TicketsPage() {
           <div>
             <div className="flex items-center gap-3">
               <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
-                ticket.status === "used"
+                effectiveStatus(ticket) === "used"
                   ? "bg-sky-400/10 text-sky-300"
-                  : ticket.status === "expired"
+                  : effectiveStatus(ticket) === "expired"
                     ? "bg-red-400/10 text-red-300"
                     : "bg-teal-400/10 text-teal-300"
-              }`}>{ticket.status}</span>
+              }`}>{effectiveStatus(ticket)}</span>
               <span className="text-xs text-slate-500">{ticket.ticketType === "package" ? "Package Ticket" : "Table Ticket"}</span>
             </div>
             <h2 className="mt-3 font-display text-2xl text-gold">{ticket.ticketCode}</h2>

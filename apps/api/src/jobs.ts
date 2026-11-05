@@ -4,6 +4,13 @@ import Stripe from "stripe";
 const prisma = new PrismaClient();
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
+// Ticket ที่ยังเป็น active แต่เลยเวลา validUntil แล้ว ต้องถูกเปลี่ยนเป็น expired
+// (เดิมเปลี่ยนเฉพาะตอนพนักงานสแกนใช้ ทำให้ตั๋วหมดอายุยังขึ้นว่าใช้งานได้)
+export async function expireStaleTickets() {
+  const result = await prisma.eTicket.updateMany({ where: { status: "active", validUntil: { lt: new Date() } }, data: { status: "expired" } });
+  return result.count;
+}
+
 export async function settleAuctionSession(sessionId: number) {
   const session = await prisma.auctionSession.findUnique({ where: { id: sessionId }, include: { items: true } });
   if (!session) throw Object.assign(new Error("ไม่พบรายการประมูล"), { status: 404 });
@@ -67,7 +74,9 @@ export async function settleAuctionSession(sessionId: number) {
 }
 
 export function startJobs() {
+  void expireStaleTickets().catch((error) => console.error("expireStaleTickets failed:", error));
   cron.schedule("* * * * *", async () => {
+    await expireStaleTickets();
     await prisma.booking.updateMany({ where: { status: "pending_payment", holdExpiresAt: { lt: new Date() } }, data: { status: "expired" } });
     await prisma.booking.updateMany({ where: { status: "confirmed", graceUntil: { lt: new Date() } }, data: { status: "no_show", depositForfeited: true } });
   });

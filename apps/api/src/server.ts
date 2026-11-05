@@ -21,7 +21,7 @@ import {
 import { accessToken, hashToken, randomToken } from "./lib/auth";
 import { AuthRequest, requireAuth, requireRole, validate } from "./middleware";
 import { businessDate } from "./lib/time";
-import { settleAuctionSession, startJobs } from "./jobs";
+import { expireStaleTickets, settleAuctionSession, startJobs } from "./jobs";
 import { userStore } from "./lib/userStore";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -844,6 +844,7 @@ app.post("/api/bookings/:code/pay", requireAuth, async (req: AuthRequest, res, n
 
 app.get("/api/tickets", requireAuth, async (req: AuthRequest, res, next) => {
   try {
+    await expireStaleTickets();
     const tickets = await prisma.eTicket.findMany({
       where: { userId: req.user!.id },
       include: { booking: { include: { table: { include: { zone: true } } } }, packageOrder: { include: { package: true } } },
