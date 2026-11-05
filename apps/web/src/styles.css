@@ -47,60 +47,105 @@
   transform-origin: top;
 }
 
-.auction-page-intro {
-  background:
-    radial-gradient(circle at 12% 20%, rgba(244, 63, 94, 0.16), transparent 34%),
-    radial-gradient(circle at 88% 80%, rgba(45, 212, 191, 0.12), transparent 32%),
-    rgba(15, 23, 42, 0.38);
-  animation: auction-intro-float 7s ease-in-out infinite;
-}
+/* ---------- Auction page ---------- */
+.au-reveal { animation: au-rise 640ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes au-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
-.auction-intro-orb {
-  position: absolute;
-  width: 10rem;
-  height: 10rem;
-  border-radius: 9999px;
-  filter: blur(42px);
-  opacity: 0.18;
-  pointer-events: none;
-}
+.au-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #94a3b8; }
 
-.auction-intro-orb-left {
-  top: -5rem;
-  left: 18%;
-  background: #fb7185;
-}
+/* hero */
+.au-hero { position: relative; margin-bottom: 1.5rem; padding: 2.25rem 0.25rem 2rem; isolation: isolate; }
+.au-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, rgba(244,63,94,0.55), rgba(245,158,11,0.35) 45%, transparent); }
+.au-aurora { position: absolute; inset: -3rem -2rem 0; z-index: -1; overflow: hidden; pointer-events: none; -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent); mask-image: linear-gradient(to bottom, #000 40%, transparent); }
+.au-aurora span { position: absolute; border-radius: 9999px; filter: blur(60px); opacity: 0.35; }
+.au-aurora span:nth-child(1) { width: 18rem; height: 18rem; left: -3rem; top: -2rem; background: #f43f5e; animation: au-drift-a 14s ease-in-out infinite; }
+.au-aurora span:nth-child(2) { width: 15rem; height: 15rem; right: 6%; top: 1rem; background: #14b8a6; opacity: 0.25; animation: au-drift-b 17s ease-in-out infinite; }
+.au-aurora span:nth-child(3) { width: 11rem; height: 11rem; left: 42%; top: 3rem; background: #f59e0b; opacity: 0.18; animation: au-drift-a 20s ease-in-out infinite reverse; }
+@keyframes au-drift-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(38px, 22px) scale(1.12); } }
+@keyframes au-drift-b { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-44px, 16px) scale(0.92); } }
 
-.auction-intro-orb-right {
-  right: 12%;
-  bottom: -5rem;
-  background: #2dd4bf;
-}
+.au-eyebrow { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.3em; color: #2dd4bf; }
+.au-title { margin-top: 0.75rem; font-family: Kanit, sans-serif; font-weight: 700; font-size: clamp(2.4rem, 7vw, 3.75rem); line-height: 1.05; color: #fff; }
+.au-title span { margin-left: 0.18em; background: linear-gradient(100deg, #fb7185 10%, #fbbf24 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-.auction-payment-panel {
-  border-color: rgba(45, 212, 191, 0.2);
-  background:
-    linear-gradient(135deg, rgba(20, 184, 166, 0.08), transparent 48%),
-    rgba(15, 23, 42, 0.6);
-}
+.au-status { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.22rem 0.7rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; background: rgba(148,163,184,0.12); color: #cbd5e1; }
+.au-status i { width: 0.45rem; height: 0.45rem; border-radius: 9999px; background: currentColor; }
+.au-status-open { background: rgba(20,184,166,0.14); color: #5eead4; }
+.au-status-open i { animation: au-pulse 1.8s ease-out infinite; }
+.au-status-scheduled { background: rgba(245,158,11,0.14); color: #fcd34d; }
+.au-status-closed { background: rgba(244,63,94,0.12); color: #fda4af; }
+@keyframes au-pulse { 0% { box-shadow: 0 0 0 0 currentColor; } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+
+.au-countdown { margin-top: 1.4rem; display: inline-flex; align-items: baseline; gap: 0.75rem; padding: 0.55rem 1rem 0.55rem 1.1rem; border-radius: 9999px; background: rgba(255,255,255,0.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+.au-countdown span { font-size: 0.75rem; color: #94a3b8; }
+.au-countdown b { font-family: Kanit, sans-serif; font-size: 1.35rem; font-weight: 500; letter-spacing: 0.06em; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* notice */
+.au-notice { display: flex; align-items: flex-start; gap: 0.7rem; margin-bottom: 1.75rem; padding: 0.15rem 0 0.15rem 1rem; border-left: 2px solid rgba(245,158,11,0.6); font-size: 0.85rem; line-height: 1.55; color: #fde68a; }
+.au-notice svg { flex: none; width: 1.1rem; height: 1.1rem; margin-top: 0.2rem; color: #f59e0b; }
+
+/* my drips */
+.au-mine { margin-bottom: 1.75rem; padding: 1.4rem 1.5rem; border-radius: 1.5rem; background: linear-gradient(140deg, rgba(56,189,248,0.10), rgba(99,102,241,0.05) 55%, transparent), rgba(16,20,30,0.55); box-shadow: inset 0 0 0 1px rgba(125,170,255,0.14); }
+.au-mine-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.au-mine-stats { display: flex; align-items: center; gap: 1.25rem; }
+.au-mine-stats > i { width: 1px; height: 2.4rem; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.25), transparent); }
+.au-stat { display: flex; align-items: baseline; gap: 0.4rem; }
+.au-stat b { font-family: Kanit, sans-serif; font-size: 2.1rem; font-weight: 600; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.au-stat span { font-size: 0.8rem; color: #94a3b8; }
+.au-stat-gold b { color: #fcd34d; }
+.au-mine-list { margin-top: 1.1rem; display: grid; gap: 0.85rem; list-style: none; padding: 0; }
+.au-mine-list li { animation: au-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.au-bar { margin-top: 0.4rem; height: 0.4rem; border-radius: 9999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.au-bar div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #38bdf8, #a78bfa); transition: width 800ms cubic-bezier(0.22, 1, 0.36, 1); }
+.au-empty { margin-top: 0.9rem; font-size: 0.85rem; color: #94a3b8; }
+
+/* payment */
+.au-pay { margin-bottom: 1.75rem; padding: 1rem 1.25rem; border-radius: 1.1rem; background: rgba(16,20,30,0.45); box-shadow: inset 0 0 0 1px rgba(45,212,191,0.18); }
+.au-pay-icon { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 0.8rem; background: linear-gradient(135deg, rgba(20,184,166,0.28), rgba(20,184,166,0.06)); color: #5eead4; }
+.au-pay-icon svg { width: 1.2rem; height: 1.2rem; }
+.au-pay-form { animation: au-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.au-link { font-size: 0.78rem; font-weight: 600; color: #5eead4; padding: 0.35rem 0.8rem; border-radius: 9999px; box-shadow: inset 0 0 0 1px rgba(94,234,212,0.3); transition: background 160ms; }
+.au-link:hover { background: rgba(94,234,212,0.1); }
+
+/* alerts */
+.au-alert { margin-bottom: 1rem; padding: 0.7rem 1rem; border-radius: 0.9rem; font-size: 0.85rem; animation: au-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.au-alert-ok { background: rgba(20,184,166,0.1); color: #99f6e4; box-shadow: inset 3px 0 0 #14b8a6; }
+.au-alert-err { background: rgba(244,63,94,0.1); color: #fda4af; box-shadow: inset 3px 0 0 #f43f5e; }
+
+/* pot */
+.au-pot { position: relative; isolation: isolate; margin: 0.5rem 0 2.25rem; padding: 2.25rem 1rem 1.75rem; text-align: center; }
+.au-pot-glow { position: absolute; left: 50%; top: 42%; z-index: -1; width: min(34rem, 100%); aspect-ratio: 2 / 1; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(245,158,11,0.2), rgba(244,63,94,0.08) 55%, transparent); filter: blur(10px); animation: au-breathe 5s ease-in-out infinite; }
+@keyframes au-breathe { 0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.96); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } }
+.au-pot-number { margin-top: 0.5rem; font-family: Kanit, sans-serif; font-weight: 700; font-size: clamp(3rem, 10vw, 5rem); line-height: 1; color: #fff; text-shadow: 0 0 28px rgba(251,191,36,0.35); font-variant-numeric: tabular-nums; }
+.au-pot-number span { margin-left: 0.4rem; font-size: 0.32em; font-weight: 500; color: #fcd34d; text-shadow: none; }
+.au-pot-baht { margin-top: 0.35rem; font-family: Kanit, sans-serif; font-size: 1.25rem; font-weight: 500; color: #fde68a; }
+.au-bump { animation: au-bump 480ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes au-bump { 0% { transform: scale(1); } 35% { transform: scale(1.045); } 100% { transform: scale(1); } }
+.au-time { position: relative; width: min(22rem, 80%); height: 3px; margin: 1.4rem auto 0; border-radius: 9999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.au-time div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #14b8a6, #f59e0b 60%, #f43f5e); transition: width 900ms linear; }
+
+/* admin */
+.au-admin { margin-bottom: 1.75rem; border-radius: 1.1rem; background: rgba(244,63,94,0.04); box-shadow: inset 0 0 0 1px rgba(244,63,94,0.2); }
+.au-admin-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; cursor: pointer; list-style: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; color: #fda4af; }
+.au-admin-summary::-webkit-details-marker { display: none; }
+.au-admin-summary svg { width: 1rem; height: 1rem; transition: transform 240ms; }
+.au-admin[open] .au-admin-summary svg { transform: rotate(180deg); }
+.au-admin-body { padding: 0 1.25rem 1.25rem; animation: au-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* loading */
+.au-skeleton { display: grid; gap: 1rem; }
+.au-skeleton span { height: 8rem; border-radius: 1.25rem; background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%) 0 0 / 200% 100%; animation: au-shimmer 1.4s linear infinite; }
+@keyframes au-shimmer { to { background-position: -200% 0; } }
 
 .auction-preview-label {
   color: #fde68a;
   text-shadow: 0 0 8px rgba(250, 204, 21, 0.6), 0 0 24px rgba(250, 204, 21, 0.22);
 }
 
-@keyframes auction-intro-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .dashboard-details-slide,
-  .auction-page-intro {
-    animation: none;
+  .au-reveal, .au-aurora span, .au-pot-glow, .au-status-open i, .au-bump, .au-mine-list li, .au-skeleton span, .au-pay-form, .au-alert, .au-admin-body {
+    animation: none !important;
   }
+  .au-bar div, .au-time div { transition: none; }
 }
